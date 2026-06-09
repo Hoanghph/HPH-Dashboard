@@ -20,7 +20,7 @@ body{margin:0;font-family:Arial,sans-serif;background:#eef3f8;color:#1f2937}
 .header h1{margin:0;color:#052b55}
 .header-right{display:flex;gap:10px;align-items:center}
 button{padding:10px 14px;border:none;border-radius:10px;background:#0d6efd;color:white;font-weight:700;cursor:pointer}
-.filters{display:grid;grid-template-columns:180px 180px 180px 1fr;gap:12px;margin-bottom:18px}
+.filters{display:grid;grid-template-columns:160px 160px 160px 160px 1fr;gap:12px;margin-bottom:18px}
 select{padding:11px;border:1px solid #cbd5e1;border-radius:10px;background:white}
 .month-box{background:white;border-radius:12px;padding:12px;border:1px solid #dbe3ef}
 .month-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-top:8px}
@@ -44,9 +44,12 @@ th{background:#052b55;color:white}
 .bg-warn{background:#fef9c3;color:#854d0e}
 .bg-bad{background:#fee2e2;color:#991b1b}
 canvas{max-height:460px}
-#chartMonth{
-  height:430px !important;
-}
+#chartMonth{height:430px!important}
+.chart-legend-custom{display:flex;justify-content:center;gap:30px;margin:8px 0 18px 0;font-size:14px;font-weight:700;color:#555}
+.chart-legend-custom span{display:flex;align-items:center;gap:8px}
+.chart-legend-custom i{width:18px;height:12px;display:inline-block;border-radius:3px}
+.legend-plan{background:#8ec9f0}
+.legend-actual{background:#f8a4bd}
 .tabs{display:flex;gap:8px;margin-bottom:18px}
 .tab{padding:12px 18px;background:white;border-radius:10px;cursor:pointer;font-weight:700}
 .tab.active{background:#0d6efd;color:white}
@@ -95,11 +98,18 @@ canvas{max-height:460px}
     <option value="year">Theo năm</option>
   </select>
 
+  <select id="filterQuarter">
+    <option value="Q1">Q1</option>
+    <option value="Q2">Q2</option>
+    <option value="Q3">Q3</option>
+    <option value="Q4">Q4</option>
+  </select>
+
   <select id="filterDepot">
     <option value="">Tất cả Depot</option>
   </select>
 
-  <div class="month-box">
+  <div class="month-box" id="monthBox">
     <b>Chọn tháng</b>
     <div class="month-grid" id="monthChecks"></div>
   </div>
@@ -113,37 +123,23 @@ canvas{max-height:460px}
 <div id="sectionPlan">
 
 <div class="kpi-grid">
-  <div class="card">
-    <div class="kpi-title">Kế hoạch TEU</div>
-    <div class="kpi-value" id="kpiPlan">0</div>
-    <div class="kpi-sub">TEU</div>
-  </div>
-  <div class="card">
-    <div class="kpi-title">Thực hiện TEU</div>
-    <div class="kpi-value" id="kpiActual">0</div>
-    <div class="kpi-sub">KPI TEU</div>
-  </div>
-  <div class="card">
-    <div class="kpi-title">% Hoàn thành</div>
-    <div class="kpi-value" id="kpiRate">0%</div>
-    <div class="kpi-sub">TH / KH</div>
-  </div>
-  <div class="card">
-    <div class="kpi-title">Thiếu / Vượt</div>
-    <div class="kpi-value" id="kpiGap">0</div>
-    <div class="kpi-sub">TEU</div>
-  </div>
-  <div class="card">
-    <div class="kpi-title">Dự báo cuối năm</div>
-    <div class="kpi-value" id="kpiForecast">0</div>
-    <div class="kpi-sub">TEU</div>
-  </div>
+  <div class="card"><div class="kpi-title">Kế hoạch TEU</div><div class="kpi-value" id="kpiPlan">0</div><div class="kpi-sub">TEU</div></div>
+  <div class="card"><div class="kpi-title">Thực hiện TEU</div><div class="kpi-value" id="kpiActual">0</div><div class="kpi-sub">KPI TEU</div></div>
+  <div class="card"><div class="kpi-title">% Hoàn thành</div><div class="kpi-value" id="kpiRate">0%</div><div class="kpi-sub">TH / KH</div></div>
+  <div class="card"><div class="kpi-title">Thiếu / Vượt</div><div class="kpi-value" id="kpiGap">0</div><div class="kpi-sub">TEU</div></div>
+  <div class="card"><div class="kpi-title">Dự báo cuối năm</div><div class="kpi-value" id="kpiForecast">0</div><div class="kpi-sub">TEU</div></div>
 </div>
 
 <div class="grid-wide">
   <div class="card">
-    <h3>Kế hoạch vs Thực hiện theo tháng</h3>
-    <canvas id="chartMonth"></canvas>
+    <h3 id="monthChartTitle">Kế hoạch vs Thực hiện</h3>
+    <div class="chart-legend-custom">
+      <span><i class="legend-plan"></i>Kế hoạch TEU</span>
+      <span><i class="legend-actual"></i>Thực hiện TEU</span>
+    </div>
+    <div style="height:500px;">
+      <canvas id="chartMonth"></canvas>
+    </div>
   </div>
 
   <div class="card">
@@ -175,7 +171,7 @@ canvas{max-height:460px}
 
 <div class="grid-wide">
   <div class="card">
-    <h3>So sánh tổng TEU theo năm theo tháng đã chọn</h3>
+    <h3>So sánh tổng TEU theo năm</h3>
     <canvas id="chartYearCompare"></canvas>
   </div>
 
@@ -245,23 +241,9 @@ function fmt(v){return Number(v||0).toLocaleString("vi-VN")}
 function pct(a,b){return b ? a/b*100 : 0}
 function tx(v){return String(v||"").trim().toUpperCase()}
 
-function statusClass(r){
-  if(r>=100) return "status-ok";
-  if(r>=90) return "status-warn";
-  return "status-bad";
-}
-
-function statusText(r){
-  if(r>=100) return "Đạt";
-  if(r>=90) return "Theo dõi";
-  return "Chưa đạt";
-}
-
-function badgeClass(r){
-  if(r>=100) return "bg-ok";
-  if(r>=90) return "bg-warn";
-  return "bg-bad";
-}
+function statusClass(r){if(r>=100)return"status-ok";if(r>=90)return"status-warn";return"status-bad"}
+function statusText(r){if(r>=100)return"Đạt";if(r>=90)return"Theo dõi";return"Chưa đạt"}
+function badgeClass(r){if(r>=100)return"bg-ok";if(r>=90)return"bg-warn";return"bg-bad"}
 
 function sumBy(rows,key,valueKey){
   const o={};
@@ -272,6 +254,13 @@ function sumBy(rows,key,valueKey){
   return o;
 }
 
+function getQuarterMonths(q){
+  if(q==="Q1") return [1,2,3];
+  if(q==="Q2") return [4,5,6];
+  if(q==="Q3") return [7,8,9];
+  return [10,11,12];
+}
+
 function initFilters(){
   const years=[...new Set(
     []
@@ -279,9 +268,8 @@ function initFilters(){
     .concat((DATA.KE_HOACH_NAM||[]).map(r=>n(r.NAM)))
   )].filter(Boolean).sort((a,b)=>a-b);
 
-  const depots=[...new Set(
-    (DATA.API_MONTH_SUMMARY||[]).map(r=>r.DEPOT)
-  )].filter(Boolean).sort();
+  const depots=[...new Set((DATA.API_MONTH_SUMMARY||[]).map(r=>r.DEPOT))]
+    .filter(Boolean).sort();
 
   filterNam.innerHTML=years.map(y=>`<option value="${y}">Năm ${y}</option>`).join("");
   filterNam.value=years[0] || "";
@@ -292,10 +280,13 @@ function initFilters(){
 
   renderMonthCheckboxes();
 
-  ["filterNam","filterLoai","filterDepot"].forEach(id=>{
-    document.getElementById(id).addEventListener("change",()=>{
-      updateDashboard();
-    });
+  ["filterNam","filterQuarter","filterDepot"].forEach(id=>{
+    document.getElementById(id).addEventListener("change",updateDashboard);
+  });
+
+  filterLoai.addEventListener("change",()=>{
+    updateFilterDisplay();
+    updateDashboard();
   });
 
   tabPlan.onclick=()=>{
@@ -312,6 +303,15 @@ function initFilters(){
     sectionPlan.classList.add("hidden");
     renderYearCompare();
   };
+
+  updateFilterDisplay();
+}
+
+function updateFilterDisplay(){
+  const loai = filterLoai.value;
+  if(loai==="month"){filterQuarter.style.display="none";monthBox.style.display="block"}
+  if(loai==="quarter"){filterQuarter.style.display="block";monthBox.style.display="none"}
+  if(loai==="year"){filterQuarter.style.display="none";monthBox.style.display="none"}
 }
 
 function renderMonthCheckboxes(){
@@ -324,9 +324,7 @@ function renderMonthCheckboxes(){
 
   document.querySelectorAll(".month-check").forEach(cb=>{
     cb.addEventListener("change",()=>{
-      if(getSelectedMonths().length===0){
-        cb.checked=true;
-      }
+      if(getSelectedMonths().length===0){cb.checked=true}
       updateDashboard();
     });
   });
@@ -337,57 +335,41 @@ function getSelectedMonths(){
 }
 
 function getSelected(){
+  let months = [];
+  if(filterLoai.value==="month") months = getSelectedMonths();
+  if(filterLoai.value==="quarter") months = getQuarterMonths(filterQuarter.value);
+  if(filterLoai.value==="year") months = MONTHS;
+
   return {
     nam:n(filterNam.value),
     loai:filterLoai.value,
-    months:getSelectedMonths(),
+    quarter:filterQuarter.value,
+    months:months,
     depot:filterDepot.value
   };
 }
 
 function getPlanRows(sel){
-  if(sel.loai==="month"){
-    return (DATA.KE_HOACH_THANG||[]).filter(r=>
-      n(r.NAM)===sel.nam &&
-      sel.months.includes(n(r.THANG))
-    );
-  }
-
-  if(sel.loai==="quarter"){
-    const qMonths = getQuarterMonthsFromSelected(sel.months);
-    return (DATA.KE_HOACH_THANG||[]).filter(r=>
-      n(r.NAM)===sel.nam &&
-      qMonths.includes(n(r.THANG))
-    );
-  }
-
   if(sel.loai==="year"){
     return (DATA.KE_HOACH_NAM||[]).filter(r=>n(r.NAM)===sel.nam);
   }
 
-  return [];
+  return (DATA.KE_HOACH_THANG||[]).filter(r=>
+    n(r.NAM)===sel.nam &&
+    sel.months.includes(n(r.THANG))
+  );
 }
 
 function getSummaryRows(sel){
   let rows=[];
 
-  if(sel.loai==="month"){
+  if(sel.loai==="year"){
+    rows=(DATA.API_YEAR_SUMMARY||[]).filter(r=>n(r.NAM)===sel.nam);
+  }else{
     rows=(DATA.API_MONTH_SUMMARY||[]).filter(r=>
       n(r.NAM)===sel.nam &&
       sel.months.includes(n(r.THANG))
     );
-  }
-
-  if(sel.loai==="quarter"){
-    const qMonths = getQuarterMonthsFromSelected(sel.months);
-    rows=(DATA.API_MONTH_SUMMARY||[]).filter(r=>
-      n(r.NAM)===sel.nam &&
-      qMonths.includes(n(r.THANG))
-    );
-  }
-
-  if(sel.loai==="year"){
-    rows=(DATA.API_YEAR_SUMMARY||[]).filter(r=>n(r.NAM)===sel.nam);
   }
 
   if(sel.depot){
@@ -397,15 +379,14 @@ function getSummaryRows(sel){
   return rows;
 }
 
-function getQuarterMonthsFromSelected(months){
-  const set = new Set();
-  months.forEach(m=>{
-    if(m<=3){[1,2,3].forEach(x=>set.add(x))}
-    else if(m<=6){[4,5,6].forEach(x=>set.add(x))}
-    else if(m<=9){[7,8,9].forEach(x=>set.add(x))}
-    else {[10,11,12].forEach(x=>set.add(x))}
-  });
-  return [...set];
+function getTitleText(sel){
+  if(sel.loai==="month"){
+    return "Kế hoạch vs Thực hiện - Theo tháng đã chọn";
+  }
+  if(sel.loai==="quarter"){
+    return "Kế hoạch vs Thực hiện - Theo " + sel.quarter;
+  }
+  return "Kế hoạch vs Thực hiện - Năm " + sel.nam;
 }
 
 function updateDashboard(){
@@ -421,8 +402,16 @@ function updateDashboard(){
   const rate=pct(totalActual,totalPlan);
   const gap=totalActual-totalPlan;
 
-  const monthsDone=[...new Set((DATA.API_MONTH_SUMMARY||[]).filter(r=>n(r.NAM)===sel.nam).map(r=>n(r.THANG)))].filter(Boolean).length || 1;
-  const yearActual=(DATA.API_YEAR_SUMMARY||[]).filter(r=>n(r.NAM)===sel.nam).reduce((s,r)=>s+n(r.KPI_TEU),0);
+  const monthsDone=[...new Set(
+    (DATA.API_MONTH_SUMMARY||[])
+      .filter(r=>n(r.NAM)===sel.nam)
+      .map(r=>n(r.THANG))
+  )].filter(Boolean).length || 1;
+
+  const yearActual=(DATA.API_YEAR_SUMMARY||[])
+    .filter(r=>n(r.NAM)===sel.nam)
+    .reduce((s,r)=>s+n(r.KPI_TEU),0);
+
   const forecast=Math.round(yearActual/monthsDone*12);
 
   kpiPlan.innerText=fmt(totalPlan);
@@ -438,8 +427,10 @@ function updateDashboard(){
 }
 
 function renderMonthChart(sel){
-  const months = sel.loai==="year" ? MONTHS : sel.months;
+  const months = sel.months;
   const pm={},am={};
+
+  monthChartTitle.innerText = getTitleText(sel);
 
   months.forEach(m=>{pm[m]=0;am[m]=0});
 
@@ -467,49 +458,17 @@ function renderMonthChart(sel){
       ]
     },
     options:{
-  responsive:true,
-  maintainAspectRatio:false,
-  layout:{
-    padding:{
-      top:45,
-      bottom:10
-    }
-  },
-  plugins:{
-    legend:{
-      display:true,
-      position:"top",
-      align:"center",
-      labels:{
-        boxWidth:16,
-        padding:25,
-        font:{
-          size:13,
-          weight:"bold"
-        }
+      responsive:true,
+      maintainAspectRatio:false,
+      layout:{padding:{top:25,bottom:10}},
+      plugins:{
+        legend:{display:false},
+        title:{display:false}
+      },
+      scales:{
+        y:{beginAtZero:true,grace:"15%"}
       }
     },
-    title:{
-      display:true,
-      text:titleText,
-      align:"center",
-      font:{
-        size:17,
-        weight:"bold"
-      },
-      padding:{
-        top:5,
-        bottom:30
-      }
-    }
-  },
-  scales:{
-    y:{
-      beginAtZero:true,
-      grace:"15%"
-    }
-  }
-},
     plugins:[valueLabelPlugin]
   });
 }
@@ -540,7 +499,6 @@ function renderRateLineChart(plan,actual){
 
 function renderDetailTable(plan,actual){
   const lines=[...new Set([...Object.keys(plan),...Object.keys(actual)])].sort();
-
   let tp=0,ta=0,html="";
 
   lines.forEach(h=>{
@@ -548,7 +506,6 @@ function renderDetailTable(plan,actual){
     const th=actual[h]||0;
     const r=pct(th,kh);
     const gap=th-kh;
-
     tp+=kh;
     ta+=th;
 
@@ -580,8 +537,9 @@ function renderDetailTable(plan,actual){
 }
 
 function renderYearCompare(){
-  const selectedMonths=getSelectedMonths();
-  const depot=filterDepot.value;
+  const sel = getSelected();
+  const months = sel.months;
+  const depot = filterDepot.value;
 
   const years=[...new Set(
     []
@@ -590,16 +548,15 @@ function renderYearCompare(){
   )].filter(Boolean).sort((a,b)=>a-b);
 
   const yp={},ya={};
-
   years.forEach(y=>{yp[y]=0;ya[y]=0});
 
   (DATA.KE_HOACH_THANG||[])
-    .filter(r=>selectedMonths.includes(n(r.THANG)))
+    .filter(r=>months.includes(n(r.THANG)))
     .forEach(r=>yp[n(r.NAM)]+=n(r.KE_HOACH_TEU));
 
   (DATA.API_MONTH_SUMMARY||[])
     .filter(r=>
-      selectedMonths.includes(n(r.THANG)) &&
+      months.includes(n(r.THANG)) &&
       (!depot || r.DEPOT===depot)
     )
     .forEach(r=>ya[n(r.NAM)]+=n(r.KPI_TEU));
@@ -651,7 +608,7 @@ function renderYearCompare(){
     plugins:[valueLabelPlugin]
   });
 
-  renderLineByYear(years,selectedMonths,depot);
+  renderLineByYear(years,months,depot);
 }
 
 function renderLineByYear(years,months,depot){
