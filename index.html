@@ -1,0 +1,544 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>HPH Logistics - Điều hành tuần</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#eef3f8;color:#1f2937}
+.app{display:flex;min-height:100vh}
+.sidebar{width:240px;background:#052b55;color:white;padding:22px;position:fixed;height:100vh}
+.logo{font-size:22px;font-weight:700;margin-bottom:28px}
+.menu a{display:block;color:#fff;text-decoration:none;padding:13px;border-radius:10px;margin-bottom:8px;background:rgba(255,255,255,.08)}
+.menu a:hover{background:#2563eb}
+.menu a.active{background:#0d6efd}
+.main{margin-left:240px;padding:22px;width:calc(100% - 240px)}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.header h1{margin:0;color:#052b55}
+.header-right{display:flex;gap:10px;align-items:center}
+button{padding:10px 14px;border:none;border-radius:10px;background:#0d6efd;color:white;font-weight:700;cursor:pointer}
+.filters{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:18px}
+select{padding:11px;border:1px solid #cbd5e1;border-radius:10px;background:white}
+.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:18px}
+.card{background:white;border-radius:16px;padding:16px;box-shadow:0 4px 14px rgba(0,0,0,.08);margin-bottom:18px}
+.kpi-title{font-size:13px;color:#64748b}
+.kpi-value{font-size:30px;font-weight:700;color:#0d6efd;margin-top:8px}
+.kpi-sub{font-size:13px;color:#64748b;margin-top:5px}
+.grid-2{display:grid;grid-template-columns:2fr 1fr;gap:18px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:10px;border-bottom:1px solid #e5e7eb;text-align:right}
+th:first-child,td:first-child{text-align:left}
+th{background:#f8fafc;color:#334155}
+.status-ok{color:#16a34a;font-weight:bold}
+.status-warn{color:#ca8a04;font-weight:bold}
+.status-bad{color:#dc2626;font-weight:bold}
+.badge{padding:4px 8px;border-radius:999px;font-size:12px}
+.bg-ok{background:#dcfce7;color:#166534}
+.bg-warn{background:#fef9c3;color:#854d0e}
+.bg-bad{background:#fee2e2;color:#991b1b}
+.alert-box{line-height:2.3;font-size:22px;font-weight:700}
+canvas{max-height:420px}
+@media(max-width:900px){
+.sidebar{position:relative;width:100%;height:auto}
+.app{display:block}
+.main{margin-left:0;width:100%}
+.filters,.kpi-grid,.grid-2{grid-template-columns:1fr}
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+<div class="sidebar">
+  <div class="logo">HPH LOGISTICS</div>
+  <div class="menu">
+    <a href="index.html" class="active">📊 Điều hành tuần</a>
+    <a href="hangtau.html">🚢 Hãng tàu</a>
+    <a href="tacnghiep.html">⚙️ Tác nghiệp</a>
+    <a href="kehoach.html">📅 Kế hoạch vs Thực hiện</a>
+    <a href="#">🏗 Depot</a>
+    <a href="#">👔 Executive</a>
+  </div>
+</div>
+
+<div class="main">
+
+<div class="header">
+  <h1>Màn hình 1 - Điều hành tuần</h1>
+  <div class="header-right">
+    <button onclick="refreshData()">🔄 Cập nhật dữ liệu</button>
+    <div id="lastUpdate">Đang tải dữ liệu...</div>
+  </div>
+</div>
+
+<div class="filters">
+  <select id="filterNam"></select>
+  <select id="filterTuan"></select>
+  <select id="filterHangTau"><option value="">Tất cả hãng tàu</option></select>
+  <select id="filterDepot"><option value="">Tất cả Depot</option></select>
+</div>
+
+<div class="kpi-grid">
+  <div class="card">
+    <div class="kpi-title">Kế hoạch tuần</div>
+    <div class="kpi-value" id="kpiPlan">0</div>
+    <div class="kpi-sub">TEU</div>
+  </div>
+  <div class="card">
+    <div class="kpi-title">Thực hiện tuần</div>
+    <div class="kpi-value" id="kpiActual">0</div>
+    <div class="kpi-sub">KPI TEU - không tính Xuất tàu</div>
+  </div>
+  <div class="card">
+    <div class="kpi-title">% hoàn thành</div>
+    <div class="kpi-value" id="kpiRate">0%</div>
+    <div class="kpi-sub">TH / KH</div>
+  </div>
+  <div class="card">
+    <div class="kpi-title">Thiếu / Vượt</div>
+    <div class="kpi-value" id="kpiGap">0</div>
+    <div class="kpi-sub">TEU</div>
+  </div>
+  <div class="card">
+    <div class="kpi-title">CONT thực hiện</div>
+    <div class="kpi-value" id="kpiCont">0</div>
+    <div class="kpi-sub">KPI CONT</div>
+  </div>
+</div>
+
+<div class="grid-2">
+  <div class="card">
+    <h3>Kế hoạch vs Thực hiện theo hãng tàu</h3>
+    <canvas id="chartPlanActual"></canvas>
+  </div>
+
+  <div class="card">
+    <h3>Cảnh báo điều hành</h3>
+    <div id="alertBox" class="alert-box"></div>
+  </div>
+</div>
+
+<div class="card">
+  <h3>Bảng KPI TEU theo hãng tàu</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Hãng tàu</th>
+        <th>KH TEU</th>
+        <th>TH TEU</th>
+        <th>% HT</th>
+        <th>Thiếu/Vượt</th>
+        <th>Trạng thái</th>
+      </tr>
+    </thead>
+    <tbody id="tableHangTau"></tbody>
+  </table>
+</div>
+
+<div class="card">
+  <h3>Sản lượng CONT theo hãng tàu × tác nghiệp</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Hãng tàu</th>
+        <th>Cấp vỏ</th>
+        <th>Giao hàng</th>
+        <th>Hạ hàng</th>
+        <th>Hạ vỏ</th>
+        <th>Tổng</th>
+      </tr>
+    </thead>
+    <tbody id="tableCont"></tbody>
+  </table>
+</div>
+
+<div class="card">
+  <h3>TEU theo tác nghiệp</h3>
+  <canvas id="chartTacNghiep"></canvas>
+</div>
+
+</div>
+</div>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbxKAiACF9obGc3dkDO5VLfR3NeFRKok0O3B8yqzXsuXhU93qVfnDZzqaVkZR2tAgffy/exec";
+
+const CACHE_KEY = "HPH_DASHBOARD_DATA";
+const CACHE_TIME_KEY = "HPH_DASHBOARD_TIME";
+const CACHE_MINUTES = 10;
+
+let DATA = {};
+let chartPlanActual = null;
+let chartTacNghiep = null;
+
+const KPI_TAC_NGHIEP = ["CẤP VỎ","GIAO HÀNG","HẠ HÀNG","HẠ VỎ"];
+
+const ALL_TAC_NGHIEP = [
+  "CẤP VỎ",
+  "GIAO HÀNG",
+  "HẠ HÀNG",
+  "HẠ VỎ",
+  "XUẤT TÀU VỎ",
+  "XUẤT TÀU HÀNG"
+];
+
+const valueLabelPlugin = {
+  id: "valueLabelPlugin",
+  afterDatasetsDraw(chart){
+    const {ctx} = chart;
+    chart.data.datasets.forEach((dataset, datasetIndex)=>{
+      const meta = chart.getDatasetMeta(datasetIndex);
+      if(meta.hidden) return;
+      meta.data.forEach((bar, index)=>{
+        const value = dataset.data[index];
+        if(Number(value) > 0){
+          ctx.save();
+          ctx.fillStyle = "#111827";
+          ctx.font = "bold 12px Arial";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "bottom";
+          ctx.fillText(Number(value).toLocaleString("vi-VN"), bar.x, bar.y - 6);
+          ctx.restore();
+        }
+      });
+    });
+  }
+};
+
+function n(v){return Number(v)||0}
+function fmt(v){return Number(v||0).toLocaleString("vi-VN")}
+function pct(actual, plan){return plan ? actual/plan*100 : 0}
+function normalizeText(v){return String(v||"").trim().toUpperCase()}
+
+function statusClass(rate){
+  if(rate >= 100) return "status-ok";
+  if(rate >= 90) return "status-warn";
+  return "status-bad";
+}
+
+function statusText(rate){
+  if(rate >= 100) return "Đạt";
+  if(rate >= 90) return "Theo dõi";
+  return "Chưa đạt";
+}
+
+function badgeClass(rate){
+  if(rate >= 100) return "bg-ok";
+  if(rate >= 90) return "bg-warn";
+  return "bg-bad";
+}
+
+function initFilters(){
+  const years = [...new Set(
+    (DATA.API_WEEK_SUMMARY || []).map(r=>n(r.NAM))
+      .concat((DATA.KE_HOACH_TUAN || []).map(r=>n(r.NAM)))
+  )].filter(Boolean).sort((a,b)=>a-b);
+
+  const tuans = [...new Set(
+    (DATA.API_WEEK_SUMMARY || []).map(r=>n(r.TUAN))
+      .concat((DATA.KE_HOACH_TUAN || []).map(r=>n(r.TUAN)))
+  )].filter(Boolean).sort((a,b)=>a-b);
+
+  const hangTaus = [...new Set(
+    (DATA.DM_HANG_TAU || []).map(r=>r.HANG_TAU)
+      .concat((DATA.API_WEEK_SUMMARY || []).map(r=>r.HANG_TAU))
+  )].filter(Boolean).sort();
+
+  const depots = [...new Set((DATA.API_WEEK_SUMMARY || []).map(r=>r.DEPOT))]
+    .filter(Boolean).sort();
+
+  document.getElementById("filterNam").innerHTML =
+    years.map(y=>`<option value="${y}">Năm ${y}</option>`).join("");
+
+  document.getElementById("filterTuan").innerHTML =
+    tuans.map(t=>`<option value="${t}">Tuần ${t}</option>`).join("");
+
+  document.getElementById("filterHangTau").innerHTML =
+    `<option value="">Tất cả hãng tàu</option>` +
+    hangTaus.map(h=>`<option value="${h}">${h}</option>`).join("");
+
+  document.getElementById("filterDepot").innerHTML =
+    `<option value="">Tất cả Depot</option>` +
+    depots.map(d=>`<option value="${d}">${d}</option>`).join("");
+
+  document.getElementById("filterNam").value = years[0] || "";
+  document.getElementById("filterTuan").value = tuans[0] || "";
+
+  ["filterNam","filterTuan","filterHangTau","filterDepot"].forEach(id=>{
+    document.getElementById(id).addEventListener("change", updateDashboard);
+  });
+}
+
+function getSelected(){
+  return {
+    nam:n(document.getElementById("filterNam").value),
+    tuan:n(document.getElementById("filterTuan").value),
+    hangTau:document.getElementById("filterHangTau").value,
+    depot:document.getElementById("filterDepot").value
+  };
+}
+
+function getWeekSummaryRows(sel){
+  return (DATA.API_WEEK_SUMMARY || []).filter(r =>
+    n(r.NAM) === sel.nam &&
+    n(r.TUAN) === sel.tuan &&
+    (!sel.hangTau || r.HANG_TAU === sel.hangTau) &&
+    (!sel.depot || r.DEPOT === sel.depot)
+  );
+}
+
+function getWeekPlanRows(sel){
+  return (DATA.KE_HOACH_TUAN || []).filter(r =>
+    n(r.NAM) === sel.nam &&
+    n(r.TUAN) === sel.tuan &&
+    (!sel.hangTau || r.HANG_TAU === sel.hangTau)
+  );
+}
+
+function sumBy(rows,key,valueKey){
+  const o = {};
+  rows.forEach(r=>{
+    const k = normalizeText(r[key]) || "KHÁC";
+    o[k] = (o[k] || 0) + n(r[valueKey]);
+  });
+  return o;
+}
+
+function updateDashboard(){
+  const sel = getSelected();
+
+  const summaryRows = getWeekSummaryRows(sel);
+  const planRows = getWeekPlanRows(sel);
+
+  const planTEU = planRows.reduce((s,r)=>s+n(r.KE_HOACH_TEU),0);
+  const actualTEU = summaryRows.reduce((s,r)=>s+n(r.KPI_TEU),0);
+  const cont = summaryRows.reduce((s,r)=>s+n(r.KPI_CONT),0);
+  const rate = pct(actualTEU,planTEU);
+  const gap = actualTEU - planTEU;
+
+  document.getElementById("kpiPlan").innerText = fmt(planTEU);
+  document.getElementById("kpiActual").innerText = fmt(actualTEU);
+  document.getElementById("kpiRate").innerText = rate.toFixed(1) + "%";
+  document.getElementById("kpiGap").innerText = (gap>0?"+":"") + fmt(gap);
+  document.getElementById("kpiCont").innerText = fmt(cont);
+
+  renderHangTauTable(planRows, summaryRows);
+  renderContTable(summaryRows);
+  renderCharts(planRows, summaryRows);
+  renderAlerts(planRows, summaryRows, planTEU, actualTEU);
+}
+
+function renderHangTauTable(planRows, summaryRows){
+  const plan = sumBy(planRows,"HANG_TAU","KE_HOACH_TEU");
+  const actual = sumBy(summaryRows,"HANG_TAU","KPI_TEU");
+  const lines = [...new Set([...Object.keys(plan),...Object.keys(actual)])].sort();
+
+  let html = "";
+
+  lines.forEach(h=>{
+    const kh = plan[h] || 0;
+    const th = actual[h] || 0;
+    const r = pct(th,kh);
+    const gap = th-kh;
+
+    html += `
+      <tr>
+        <td><b>${h}</b></td>
+        <td>${fmt(kh)}</td>
+        <td>${fmt(th)}</td>
+        <td class="${statusClass(r)}">${r.toFixed(1)}%</td>
+        <td>${gap>0?"+":""}${fmt(gap)}</td>
+        <td><span class="badge ${badgeClass(r)}">${statusText(r)}</span></td>
+      </tr>`;
+  });
+
+  if(!html){
+    html = `<tr><td colspan="6" style="text-align:center;color:#64748b">Không có dữ liệu tuần này</td></tr>`;
+  }
+
+  document.getElementById("tableHangTau").innerHTML = html;
+}
+
+function renderContTable(rows){
+  const matrix = {};
+
+  rows.forEach(r=>{
+    const h = r.HANG_TAU || "Khác";
+    const t = normalizeText(r.TAC_NGHIEP_GROUP);
+
+    if(!KPI_TAC_NGHIEP.includes(t)) return;
+
+    if(!matrix[h]){
+      matrix[h] = {"CẤP VỎ":0,"GIAO HÀNG":0,"HẠ HÀNG":0,"HẠ VỎ":0,total:0};
+    }
+
+    matrix[h][t] += n(r.KPI_CONT);
+    matrix[h].total += n(r.KPI_CONT);
+  });
+
+  let total = {"CẤP VỎ":0,"GIAO HÀNG":0,"HẠ HÀNG":0,"HẠ VỎ":0,total:0};
+
+  let html = Object.keys(matrix).sort().map(h=>{
+    KPI_TAC_NGHIEP.forEach(t=>total[t]+=matrix[h][t]);
+    total.total += matrix[h].total;
+
+    return `
+      <tr>
+        <td><b>${h}</b></td>
+        <td>${fmt(matrix[h]["CẤP VỎ"])}</td>
+        <td>${fmt(matrix[h]["GIAO HÀNG"])}</td>
+        <td>${fmt(matrix[h]["HẠ HÀNG"])}</td>
+        <td>${fmt(matrix[h]["HẠ VỎ"])}</td>
+        <td><b>${fmt(matrix[h].total)}</b></td>
+      </tr>`;
+  }).join("");
+
+  html += `
+    <tr>
+      <td><b>TỔNG</b></td>
+      <td><b>${fmt(total["CẤP VỎ"])}</b></td>
+      <td><b>${fmt(total["GIAO HÀNG"])}</b></td>
+      <td><b>${fmt(total["HẠ HÀNG"])}</b></td>
+      <td><b>${fmt(total["HẠ VỎ"])}</b></td>
+      <td><b>${fmt(total.total)}</b></td>
+    </tr>`;
+
+  document.getElementById("tableCont").innerHTML = html;
+}
+
+function renderCharts(planRows, summaryRows){
+  const plan = sumBy(planRows,"HANG_TAU","KE_HOACH_TEU");
+  const actual = sumBy(summaryRows,"HANG_TAU","KPI_TEU");
+  const labels = [...new Set([...Object.keys(plan),...Object.keys(actual)])].sort();
+
+  if(chartPlanActual) chartPlanActual.destroy();
+
+  chartPlanActual = new Chart(document.getElementById("chartPlanActual"),{
+    type:"bar",
+    data:{
+      labels:labels,
+      datasets:[
+        {label:"Kế hoạch TEU",data:labels.map(h=>plan[h]||0),borderRadius:8},
+        {label:"Thực hiện KPI TEU",data:labels.map(h=>actual[h]||0),borderRadius:8}
+      ]
+    },
+    options:{
+      responsive:true,
+      layout:{padding:{top:28}},
+      plugins:{legend:{display:true},tooltip:{enabled:true}},
+      scales:{y:{beginAtZero:true}}
+    },
+    plugins:[valueLabelPlugin]
+  });
+
+  const tac = sumBy(summaryRows,"TAC_NGHIEP_GROUP","TEU");
+
+  if(chartTacNghiep) chartTacNghiep.destroy();
+
+  chartTacNghiep = new Chart(document.getElementById("chartTacNghiep"),{
+    type:"bar",
+    data:{
+      labels:ALL_TAC_NGHIEP,
+      datasets:[
+        {label:"TEU",data:ALL_TAC_NGHIEP.map(t=>tac[t]||0),borderRadius:8}
+      ]
+    },
+    options:{
+      responsive:true,
+      layout:{padding:{top:28}},
+      plugins:{legend:{display:true},tooltip:{enabled:true}},
+      scales:{y:{beginAtZero:true}}
+    },
+    plugins:[valueLabelPlugin]
+  });
+}
+
+function renderAlerts(planRows, summaryRows, totalPlan, totalActual){
+  const plan = sumBy(planRows,"HANG_TAU","KE_HOACH_TEU");
+  const actual = sumBy(summaryRows,"HANG_TAU","KPI_TEU");
+  const lines = Object.keys(plan).sort();
+
+  let alerts = [];
+  const totalRate = pct(totalActual,totalPlan);
+
+  if(totalPlan === 0){
+    alerts.push("⚠️ Chưa có kế hoạch tuần này.");
+  }else if(totalRate >= 100){
+    alerts.push(`🟢 Tổng tuần đã đạt ${totalRate.toFixed(1)}% kế hoạch.`);
+  }else{
+    alerts.push(`⚠️ Tổng tuần mới đạt ${totalRate.toFixed(1)}%, còn thiếu ${fmt(totalPlan-totalActual)} TEU.`);
+  }
+
+  lines.forEach(h=>{
+    const r = pct(actual[h]||0, plan[h]||0);
+    const gap = (actual[h]||0) - (plan[h]||0);
+
+    if(r < 90){
+      alerts.push(`🔴 ${h} mới đạt ${r.toFixed(1)}%, thiếu ${fmt(Math.abs(gap))} TEU.`);
+    }else if(r < 100){
+      alerts.push(`🟡 ${h} đạt ${r.toFixed(1)}%, còn thiếu ${fmt(Math.abs(gap))} TEU.`);
+    }else{
+      alerts.push(`🟢 ${h} vượt kế hoạch +${fmt(gap)} TEU.`);
+    }
+  });
+
+  document.getElementById("alertBox").innerHTML = alerts.join("<br>");
+}
+
+function loadDataWithCache(){
+  const cachedData = localStorage.getItem(CACHE_KEY);
+  const cachedTime = localStorage.getItem(CACHE_TIME_KEY);
+  const now = Date.now();
+
+  if(cachedData && cachedTime && now - Number(cachedTime) < CACHE_MINUTES * 60 * 1000){
+    DATA = JSON.parse(cachedData);
+
+    document.getElementById("lastUpdate").innerText =
+      "Cache: " + new Date(Number(cachedTime)).toLocaleString("vi-VN");
+
+    initFilters();
+    updateDashboard();
+    return;
+  }
+
+  fetch(API_URL)
+    .then(res=>res.json())
+    .then(json=>{
+      DATA = json;
+
+      localStorage.setItem(CACHE_KEY, JSON.stringify(json));
+      localStorage.setItem(CACHE_TIME_KEY, String(Date.now()));
+
+      if(!DATA.API_WEEK_SUMMARY){
+        alert("API chưa có API_WEEK_SUMMARY.");
+        return;
+      }
+
+      document.getElementById("lastUpdate").innerText =
+        "Cập nhật: " + new Date().toLocaleString("vi-VN");
+
+      initFilters();
+      updateDashboard();
+    })
+    .catch(err=>{
+      document.getElementById("lastUpdate").innerHTML =
+        "<span style='color:red'>Lỗi đọc dữ liệu API</span>";
+      console.error(err);
+    });
+}
+
+function refreshData(){
+  localStorage.removeItem(CACHE_KEY);
+  localStorage.removeItem(CACHE_TIME_KEY);
+  location.reload();
+}
+
+loadDataWithCache();
+</script>
+
+</body>
+</html>

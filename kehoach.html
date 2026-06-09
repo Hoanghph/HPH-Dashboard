@@ -1,0 +1,721 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>HPH Logistics - Kế hoạch vs Thực hiện</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#eef3f8;color:#1f2937}
+.app{display:flex;min-height:100vh}
+.sidebar{width:240px;background:#052b55;color:white;padding:22px;position:fixed;height:100vh}
+.logo{font-size:22px;font-weight:700;margin-bottom:28px}
+.menu a{display:block;text-decoration:none;color:white;padding:13px;border-radius:10px;margin-bottom:8px;background:rgba(255,255,255,.08)}
+.menu a.active{background:#0d6efd}
+.menu a:hover{background:#2563eb}
+.main{margin-left:240px;padding:22px;width:calc(100% - 240px)}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.header h1{margin:0;color:#052b55}
+.header-right{display:flex;gap:10px;align-items:center}
+button{padding:10px 14px;border:none;border-radius:10px;background:#0d6efd;color:white;font-weight:700;cursor:pointer}
+.filters{display:grid;grid-template-columns:180px 180px 180px 1fr;gap:12px;margin-bottom:18px}
+select{padding:11px;border:1px solid #cbd5e1;border-radius:10px;background:white}
+.month-box{background:white;border-radius:12px;padding:12px;border:1px solid #dbe3ef}
+.month-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:10px;margin-top:8px}
+.month-grid label{font-size:14px;display:flex;gap:6px;align-items:center}
+.kpi-grid{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:18px}
+.card{background:white;border-radius:16px;padding:16px;box-shadow:0 4px 14px rgba(0,0,0,.08);margin-bottom:18px}
+.kpi-title{font-size:13px;color:#64748b}
+.kpi-value{font-size:30px;font-weight:700;color:#0d6efd;margin-top:8px}
+.kpi-sub{font-size:13px;color:#64748b;margin-top:5px}
+.grid-wide{display:grid;grid-template-columns:2fr 1fr;gap:18px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:10px;border-bottom:1px solid #e5e7eb;text-align:right}
+th:first-child,td:first-child{text-align:left}
+th{background:#052b55;color:white}
+.total-row{background:#eaf2ff;font-weight:700}
+.status-ok{color:#16a34a;font-weight:bold}
+.status-warn{color:#ca8a04;font-weight:bold}
+.status-bad{color:#dc2626;font-weight:bold}
+.badge{padding:4px 8px;border-radius:999px;font-size:12px}
+.bg-ok{background:#dcfce7;color:#166534}
+.bg-warn{background:#fef9c3;color:#854d0e}
+.bg-bad{background:#fee2e2;color:#991b1b}
+canvas{max-height:460px}
+#chartMonth{
+  height:430px !important;
+}
+.tabs{display:flex;gap:8px;margin-bottom:18px}
+.tab{padding:12px 18px;background:white;border-radius:10px;cursor:pointer;font-weight:700}
+.tab.active{background:#0d6efd;color:white}
+.hidden{display:none}
+@media(max-width:900px){
+.sidebar{position:relative;width:100%;height:auto}
+.app{display:block}
+.main{margin-left:0;width:100%}
+.filters,.kpi-grid,.grid-wide{grid-template-columns:1fr}
+.month-grid{grid-template-columns:repeat(3,1fr)}
+}
+</style>
+</head>
+
+<body>
+<div class="app">
+
+<div class="sidebar">
+  <div class="logo">HPH LOGISTICS</div>
+  <div class="menu">
+    <a href="index.html">📊 Điều hành tuần</a>
+    <a href="hangtau.html">🚢 Hãng tàu</a>
+    <a href="tacnghiep.html">⚙️ Tác nghiệp</a>
+    <a href="kehoach.html" class="active">📅 Kế hoạch vs Thực hiện</a>
+    <a href="#">🏗 Depot</a>
+    <a href="#">👔 Executive</a>
+  </div>
+</div>
+
+<div class="main">
+
+<div class="header">
+  <h1>Màn hình 4 - Kế hoạch, Thực hiện & So sánh năm</h1>
+  <div class="header-right">
+    <button onclick="refreshData()">🔄 Cập nhật dữ liệu</button>
+    <div id="lastUpdate">Đang tải dữ liệu...</div>
+  </div>
+</div>
+
+<div class="filters">
+  <select id="filterNam"></select>
+
+  <select id="filterLoai">
+    <option value="month">Theo tháng</option>
+    <option value="quarter">Theo quý</option>
+    <option value="year">Theo năm</option>
+  </select>
+
+  <select id="filterDepot">
+    <option value="">Tất cả Depot</option>
+  </select>
+
+  <div class="month-box">
+    <b>Chọn tháng</b>
+    <div class="month-grid" id="monthChecks"></div>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" id="tabPlan">1. Kế hoạch vs Thực hiện</div>
+  <div class="tab" id="tabYear">2. So sánh các năm</div>
+</div>
+
+<div id="sectionPlan">
+
+<div class="kpi-grid">
+  <div class="card">
+    <div class="kpi-title">Kế hoạch TEU</div>
+    <div class="kpi-value" id="kpiPlan">0</div>
+    <div class="kpi-sub">TEU</div>
+  </div>
+  <div class="card">
+    <div class="kpi-title">Thực hiện TEU</div>
+    <div class="kpi-value" id="kpiActual">0</div>
+    <div class="kpi-sub">KPI TEU</div>
+  </div>
+  <div class="card">
+    <div class="kpi-title">% Hoàn thành</div>
+    <div class="kpi-value" id="kpiRate">0%</div>
+    <div class="kpi-sub">TH / KH</div>
+  </div>
+  <div class="card">
+    <div class="kpi-title">Thiếu / Vượt</div>
+    <div class="kpi-value" id="kpiGap">0</div>
+    <div class="kpi-sub">TEU</div>
+  </div>
+  <div class="card">
+    <div class="kpi-title">Dự báo cuối năm</div>
+    <div class="kpi-value" id="kpiForecast">0</div>
+    <div class="kpi-sub">TEU</div>
+  </div>
+</div>
+
+<div class="grid-wide">
+  <div class="card">
+    <h3>Kế hoạch vs Thực hiện theo tháng</h3>
+    <canvas id="chartMonth"></canvas>
+  </div>
+
+  <div class="card">
+    <h3>% hoàn thành theo hãng tàu</h3>
+    <canvas id="chartRateLine"></canvas>
+  </div>
+</div>
+
+<div class="card">
+  <h3>Bảng chi tiết kế hoạch vs thực hiện theo hãng tàu</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Hãng tàu</th>
+        <th>Kế hoạch TEU</th>
+        <th>Thực hiện TEU</th>
+        <th>% Hoàn thành</th>
+        <th>Thiếu / Vượt</th>
+        <th>Trạng thái</th>
+      </tr>
+    </thead>
+    <tbody id="tableDetail"></tbody>
+  </table>
+</div>
+
+</div>
+
+<div id="sectionYear" class="hidden">
+
+<div class="grid-wide">
+  <div class="card">
+    <h3>So sánh tổng TEU theo năm theo tháng đã chọn</h3>
+    <canvas id="chartYearCompare"></canvas>
+  </div>
+
+  <div class="card">
+    <h3>Bảng so sánh các năm</h3>
+    <table>
+      <thead>
+        <tr>
+          <th>Năm</th>
+          <th>Kế hoạch</th>
+          <th>Thực hiện</th>
+          <th>% HT</th>
+          <th>Tăng trưởng TH</th>
+        </tr>
+      </thead>
+      <tbody id="tableYearCompare"></tbody>
+    </table>
+  </div>
+</div>
+
+<div class="card">
+  <h3>So sánh TEU theo hãng tàu qua các năm</h3>
+  <canvas id="chartLineByYear"></canvas>
+</div>
+
+</div>
+
+</div>
+</div>
+
+<script>
+const API_URL = "https://script.google.com/macros/s/AKfycbxKAiACF9obGc3dkDO5VLfR3NeFRKok0O3B8yqzXsuXhU93qVfnDZzqaVkZR2tAgffy/exec";
+
+let DATA = {};
+let chartMonth = null;
+let chartRateLine = null;
+let chartYearCompare = null;
+let chartLineByYear = null;
+
+const MONTHS = [1,2,3,4,5,6,7,8,9,10,11,12];
+
+const valueLabelPlugin = {
+  id:"valueLabelPlugin",
+  afterDatasetsDraw(chart){
+    const {ctx}=chart;
+    chart.data.datasets.forEach((dataset,datasetIndex)=>{
+      const meta=chart.getDatasetMeta(datasetIndex);
+      if(meta.hidden) return;
+      meta.data.forEach((bar,index)=>{
+        const value=dataset.data[index];
+        if(Number(value)>0 && bar.x && bar.y){
+          ctx.save();
+          ctx.fillStyle="#111827";
+          ctx.font="bold 11px Arial";
+          ctx.textAlign="center";
+          ctx.textBaseline="bottom";
+          ctx.fillText(Number(value).toLocaleString("vi-VN"),bar.x,bar.y-6);
+          ctx.restore();
+        }
+      });
+    });
+  }
+};
+
+function n(v){return Number(v)||0}
+function fmt(v){return Number(v||0).toLocaleString("vi-VN")}
+function pct(a,b){return b ? a/b*100 : 0}
+function tx(v){return String(v||"").trim().toUpperCase()}
+
+function statusClass(r){
+  if(r>=100) return "status-ok";
+  if(r>=90) return "status-warn";
+  return "status-bad";
+}
+
+function statusText(r){
+  if(r>=100) return "Đạt";
+  if(r>=90) return "Theo dõi";
+  return "Chưa đạt";
+}
+
+function badgeClass(r){
+  if(r>=100) return "bg-ok";
+  if(r>=90) return "bg-warn";
+  return "bg-bad";
+}
+
+function sumBy(rows,key,valueKey){
+  const o={};
+  rows.forEach(r=>{
+    const k=tx(r[key]) || "KHÁC";
+    o[k]=(o[k]||0)+n(r[valueKey]);
+  });
+  return o;
+}
+
+function initFilters(){
+  const years=[...new Set(
+    []
+    .concat((DATA.API_MONTH_SUMMARY||[]).map(r=>n(r.NAM)))
+    .concat((DATA.KE_HOACH_NAM||[]).map(r=>n(r.NAM)))
+  )].filter(Boolean).sort((a,b)=>a-b);
+
+  const depots=[...new Set(
+    (DATA.API_MONTH_SUMMARY||[]).map(r=>r.DEPOT)
+  )].filter(Boolean).sort();
+
+  filterNam.innerHTML=years.map(y=>`<option value="${y}">Năm ${y}</option>`).join("");
+  filterNam.value=years[0] || "";
+
+  filterDepot.innerHTML =
+    `<option value="">Tất cả Depot</option>` +
+    depots.map(d=>`<option value="${d}">${d}</option>`).join("");
+
+  renderMonthCheckboxes();
+
+  ["filterNam","filterLoai","filterDepot"].forEach(id=>{
+    document.getElementById(id).addEventListener("change",()=>{
+      updateDashboard();
+    });
+  });
+
+  tabPlan.onclick=()=>{
+    tabPlan.classList.add("active");
+    tabYear.classList.remove("active");
+    sectionPlan.classList.remove("hidden");
+    sectionYear.classList.add("hidden");
+  };
+
+  tabYear.onclick=()=>{
+    tabYear.classList.add("active");
+    tabPlan.classList.remove("active");
+    sectionYear.classList.remove("hidden");
+    sectionPlan.classList.add("hidden");
+    renderYearCompare();
+  };
+}
+
+function renderMonthCheckboxes(){
+  monthChecks.innerHTML = MONTHS.map(m=>`
+    <label>
+      <input type="checkbox" class="month-check" value="${m}" ${m===1 ? "checked" : ""}>
+      T${m}
+    </label>
+  `).join("");
+
+  document.querySelectorAll(".month-check").forEach(cb=>{
+    cb.addEventListener("change",()=>{
+      if(getSelectedMonths().length===0){
+        cb.checked=true;
+      }
+      updateDashboard();
+    });
+  });
+}
+
+function getSelectedMonths(){
+  return [...document.querySelectorAll(".month-check:checked")].map(cb=>n(cb.value));
+}
+
+function getSelected(){
+  return {
+    nam:n(filterNam.value),
+    loai:filterLoai.value,
+    months:getSelectedMonths(),
+    depot:filterDepot.value
+  };
+}
+
+function getPlanRows(sel){
+  if(sel.loai==="month"){
+    return (DATA.KE_HOACH_THANG||[]).filter(r=>
+      n(r.NAM)===sel.nam &&
+      sel.months.includes(n(r.THANG))
+    );
+  }
+
+  if(sel.loai==="quarter"){
+    const qMonths = getQuarterMonthsFromSelected(sel.months);
+    return (DATA.KE_HOACH_THANG||[]).filter(r=>
+      n(r.NAM)===sel.nam &&
+      qMonths.includes(n(r.THANG))
+    );
+  }
+
+  if(sel.loai==="year"){
+    return (DATA.KE_HOACH_NAM||[]).filter(r=>n(r.NAM)===sel.nam);
+  }
+
+  return [];
+}
+
+function getSummaryRows(sel){
+  let rows=[];
+
+  if(sel.loai==="month"){
+    rows=(DATA.API_MONTH_SUMMARY||[]).filter(r=>
+      n(r.NAM)===sel.nam &&
+      sel.months.includes(n(r.THANG))
+    );
+  }
+
+  if(sel.loai==="quarter"){
+    const qMonths = getQuarterMonthsFromSelected(sel.months);
+    rows=(DATA.API_MONTH_SUMMARY||[]).filter(r=>
+      n(r.NAM)===sel.nam &&
+      qMonths.includes(n(r.THANG))
+    );
+  }
+
+  if(sel.loai==="year"){
+    rows=(DATA.API_YEAR_SUMMARY||[]).filter(r=>n(r.NAM)===sel.nam);
+  }
+
+  if(sel.depot){
+    rows=rows.filter(r=>r.DEPOT===sel.depot);
+  }
+
+  return rows;
+}
+
+function getQuarterMonthsFromSelected(months){
+  const set = new Set();
+  months.forEach(m=>{
+    if(m<=3){[1,2,3].forEach(x=>set.add(x))}
+    else if(m<=6){[4,5,6].forEach(x=>set.add(x))}
+    else if(m<=9){[7,8,9].forEach(x=>set.add(x))}
+    else {[10,11,12].forEach(x=>set.add(x))}
+  });
+  return [...set];
+}
+
+function updateDashboard(){
+  const sel=getSelected();
+  const planRows=getPlanRows(sel);
+  const summaryRows=getSummaryRows(sel);
+
+  const plan=sumBy(planRows,"HANG_TAU","KE_HOACH_TEU");
+  const actual=sumBy(summaryRows,"HANG_TAU","KPI_TEU");
+
+  const totalPlan=Object.values(plan).reduce((a,b)=>a+b,0);
+  const totalActual=Object.values(actual).reduce((a,b)=>a+b,0);
+  const rate=pct(totalActual,totalPlan);
+  const gap=totalActual-totalPlan;
+
+  const monthsDone=[...new Set((DATA.API_MONTH_SUMMARY||[]).filter(r=>n(r.NAM)===sel.nam).map(r=>n(r.THANG)))].filter(Boolean).length || 1;
+  const yearActual=(DATA.API_YEAR_SUMMARY||[]).filter(r=>n(r.NAM)===sel.nam).reduce((s,r)=>s+n(r.KPI_TEU),0);
+  const forecast=Math.round(yearActual/monthsDone*12);
+
+  kpiPlan.innerText=fmt(totalPlan);
+  kpiActual.innerText=fmt(totalActual);
+  kpiRate.innerText=rate.toFixed(1)+"%";
+  kpiGap.innerText=(gap>0?"+":"")+fmt(gap);
+  kpiForecast.innerText=fmt(forecast);
+
+  renderMonthChart(sel);
+  renderRateLineChart(plan,actual);
+  renderDetailTable(plan,actual);
+  renderYearCompare();
+}
+
+function renderMonthChart(sel){
+  const months = sel.loai==="year" ? MONTHS : sel.months;
+  const pm={},am={};
+
+  months.forEach(m=>{pm[m]=0;am[m]=0});
+
+  (DATA.KE_HOACH_THANG||[])
+    .filter(r=>n(r.NAM)===sel.nam && months.includes(n(r.THANG)))
+    .forEach(r=>pm[n(r.THANG)]+=n(r.KE_HOACH_TEU));
+
+  (DATA.API_MONTH_SUMMARY||[])
+    .filter(r=>
+      n(r.NAM)===sel.nam &&
+      months.includes(n(r.THANG)) &&
+      (!sel.depot || r.DEPOT===sel.depot)
+    )
+    .forEach(r=>am[n(r.THANG)]+=n(r.KPI_TEU));
+
+  if(chartMonth) chartMonth.destroy();
+
+  chartMonth=new Chart(document.getElementById("chartMonth"),{
+    type:"bar",
+    data:{
+      labels:months.map(m=>"T"+m),
+      datasets:[
+        {label:"Kế hoạch TEU",data:months.map(m=>pm[m]||0),borderRadius:8},
+        {label:"Thực hiện TEU",data:months.map(m=>am[m]||0),borderRadius:8}
+      ]
+    },
+    options:{
+  responsive:true,
+  maintainAspectRatio:false,
+  layout:{
+    padding:{
+      top:45,
+      bottom:10
+    }
+  },
+  plugins:{
+    legend:{
+      display:true,
+      position:"top",
+      align:"center",
+      labels:{
+        boxWidth:16,
+        padding:25,
+        font:{
+          size:13,
+          weight:"bold"
+        }
+      }
+    },
+    title:{
+      display:true,
+      text:titleText,
+      align:"center",
+      font:{
+        size:17,
+        weight:"bold"
+      },
+      padding:{
+        top:5,
+        bottom:30
+      }
+    }
+  },
+  scales:{
+    y:{
+      beginAtZero:true,
+      grace:"15%"
+    }
+  }
+},
+    plugins:[valueLabelPlugin]
+  });
+}
+
+function renderRateLineChart(plan,actual){
+  const labels=[...new Set([...Object.keys(plan),...Object.keys(actual)])].sort();
+
+  if(chartRateLine) chartRateLine.destroy();
+
+  chartRateLine=new Chart(document.getElementById("chartRateLine"),{
+    type:"bar",
+    data:{
+      labels,
+      datasets:[{
+        label:"% hoàn thành",
+        data:labels.map(h=>pct(actual[h]||0,plan[h]||0)),
+        borderRadius:8
+      }]
+    },
+    options:{
+      indexAxis:"y",
+      responsive:true,
+      plugins:{legend:{display:false}},
+      scales:{x:{beginAtZero:true,max:150}}
+    }
+  });
+}
+
+function renderDetailTable(plan,actual){
+  const lines=[...new Set([...Object.keys(plan),...Object.keys(actual)])].sort();
+
+  let tp=0,ta=0,html="";
+
+  lines.forEach(h=>{
+    const kh=plan[h]||0;
+    const th=actual[h]||0;
+    const r=pct(th,kh);
+    const gap=th-kh;
+
+    tp+=kh;
+    ta+=th;
+
+    html+=`
+      <tr>
+        <td><b>${h}</b></td>
+        <td>${fmt(kh)}</td>
+        <td>${fmt(th)}</td>
+        <td class="${statusClass(r)}">${r.toFixed(1)}%</td>
+        <td>${gap>0?"+":""}${fmt(gap)}</td>
+        <td><span class="badge ${badgeClass(r)}">${statusText(r)}</span></td>
+      </tr>`;
+  });
+
+  const tr=pct(ta,tp);
+  const tg=ta-tp;
+
+  html+=`
+    <tr class="total-row">
+      <td>TỔNG CỘNG</td>
+      <td>${fmt(tp)}</td>
+      <td>${fmt(ta)}</td>
+      <td>${tr.toFixed(1)}%</td>
+      <td>${tg>0?"+":""}${fmt(tg)}</td>
+      <td>-</td>
+    </tr>`;
+
+  tableDetail.innerHTML=html;
+}
+
+function renderYearCompare(){
+  const selectedMonths=getSelectedMonths();
+  const depot=filterDepot.value;
+
+  const years=[...new Set(
+    []
+    .concat((DATA.API_MONTH_SUMMARY||[]).map(r=>n(r.NAM)))
+    .concat((DATA.KE_HOACH_THANG||[]).map(r=>n(r.NAM)))
+  )].filter(Boolean).sort((a,b)=>a-b);
+
+  const yp={},ya={};
+
+  years.forEach(y=>{yp[y]=0;ya[y]=0});
+
+  (DATA.KE_HOACH_THANG||[])
+    .filter(r=>selectedMonths.includes(n(r.THANG)))
+    .forEach(r=>yp[n(r.NAM)]+=n(r.KE_HOACH_TEU));
+
+  (DATA.API_MONTH_SUMMARY||[])
+    .filter(r=>
+      selectedMonths.includes(n(r.THANG)) &&
+      (!depot || r.DEPOT===depot)
+    )
+    .forEach(r=>ya[n(r.NAM)]+=n(r.KPI_TEU));
+
+  let html="";
+  let prev=null;
+
+  years.forEach(y=>{
+    const kh=yp[y]||0;
+    const th=ya[y]||0;
+    const r=pct(th,kh);
+
+    let g="-";
+    if(prev!==null && prev>0){
+      const gr=(th-prev)/prev*100;
+      g=(gr>=0?"▲ ":"▼ ")+gr.toFixed(1)+"%";
+    }
+
+    html+=`
+      <tr>
+        <td><b>${y}</b></td>
+        <td>${fmt(kh)}</td>
+        <td>${fmt(th)}</td>
+        <td>${r.toFixed(1)}%</td>
+        <td>${g}</td>
+      </tr>`;
+
+    prev=th;
+  });
+
+  tableYearCompare.innerHTML=html;
+
+  if(chartYearCompare) chartYearCompare.destroy();
+
+  chartYearCompare=new Chart(document.getElementById("chartYearCompare"),{
+    type:"bar",
+    data:{
+      labels:years,
+      datasets:[
+        {label:"Kế hoạch",data:years.map(y=>yp[y]||0),borderRadius:8},
+        {label:"Thực hiện",data:years.map(y=>ya[y]||0),borderRadius:8}
+      ]
+    },
+    options:{
+      responsive:true,
+      layout:{padding:{top:28}},
+      scales:{y:{beginAtZero:true}}
+    },
+    plugins:[valueLabelPlugin]
+  });
+
+  renderLineByYear(years,selectedMonths,depot);
+}
+
+function renderLineByYear(years,months,depot){
+  const lines=[...new Set(
+    []
+    .concat((DATA.DM_HANG_TAU||[]).map(r=>tx(r.HANG_TAU)))
+    .concat((DATA.API_MONTH_SUMMARY||[]).map(r=>tx(r.HANG_TAU)))
+  )].filter(Boolean).sort();
+
+  const datasets=lines.map(line=>{
+    const data=years.map(y=>{
+      return (DATA.API_MONTH_SUMMARY||[])
+        .filter(r=>
+          n(r.NAM)===y &&
+          months.includes(n(r.THANG)) &&
+          tx(r.HANG_TAU)===line &&
+          (!depot || r.DEPOT===depot)
+        )
+        .reduce((s,r)=>s+n(r.KPI_TEU),0);
+    });
+
+    return {label:line,data,tension:.3};
+  });
+
+  if(chartLineByYear) chartLineByYear.destroy();
+
+  chartLineByYear=new Chart(document.getElementById("chartLineByYear"),{
+    type:"line",
+    data:{labels:years,datasets},
+    options:{
+      responsive:true,
+      plugins:{legend:{position:"bottom"}},
+      scales:{y:{beginAtZero:true}}
+    }
+  });
+}
+
+function loadData(){
+  fetch(API_URL)
+    .then(res=>res.json())
+    .then(json=>{
+      DATA=json;
+
+      if(!DATA.API_MONTH_SUMMARY || !DATA.KE_HOACH_THANG){
+        alert("API chưa có đủ API_MONTH_SUMMARY hoặc KE_HOACH_THANG.");
+        return;
+      }
+
+      lastUpdate.innerText="Cập nhật: "+new Date().toLocaleString("vi-VN");
+      initFilters();
+      updateDashboard();
+    })
+    .catch(err=>{
+      lastUpdate.innerHTML="<span style='color:red'>Lỗi đọc dữ liệu API</span>";
+      console.error(err);
+    });
+}
+
+function refreshData(){
+  loadData();
+}
+
+loadData();
+</script>
+
+</body>
+</html>

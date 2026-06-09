@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<title>HPH Logistics - Phân tích tác nghiệp</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#eef3f8;color:#1f2937}
+.app{display:flex;min-height:100vh}
+.sidebar{width:240px;background:#052b55;color:white;padding:22px;position:fixed;height:100vh}
+.logo{font-size:22px;font-weight:700;margin-bottom:28px}
+.menu a{display:block;text-decoration:none;color:white;padding:13px;border-radius:10px;margin-bottom:8px;background:rgba(255,255,255,.08)}
+.menu a.active{background:#0d6efd}.menu a:hover{background:#2563eb}
+.main{margin-left:240px;padding:22px;width:calc(100% - 240px)}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:18px}
+.header h1{margin:0;color:#052b55}.header-right{display:flex;gap:10px;align-items:center}
+button{padding:10px 14px;border:none;border-radius:10px;background:#0d6efd;color:white;font-weight:700;cursor:pointer}
+.filters{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-bottom:18px}
+select{padding:11px;border:1px solid #cbd5e1;border-radius:10px;background:white}
+.kpi-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:18px}
+.card{background:white;border-radius:16px;padding:16px;box-shadow:0 4px 14px rgba(0,0,0,.08);margin-bottom:18px}
+.kpi-title{font-size:13px;color:#64748b}.kpi-value{font-size:30px;font-weight:700;color:#0d6efd;margin-top:8px}.kpi-sub{font-size:13px;color:#64748b;margin-top:5px}
+.grid-2{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+table{width:100%;border-collapse:collapse;font-size:14px}
+th,td{padding:10px;border-bottom:1px solid #e5e7eb;text-align:right}
+th:first-child,td:first-child{text-align:left}
+th{background:#f8fafc;color:#334155}
+canvas{max-height:420px}
+.note{font-size:13px;color:#64748b;line-height:1.8}
+@media(max-width:900px){.sidebar{position:relative;width:100%;height:auto}.app{display:block}.main{margin-left:0;width:100%}.filters,.kpi-grid,.grid-2{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<div class="app">
+<div class="sidebar">
+  <div class="logo">HPH LOGISTICS</div>
+  <div class="menu">
+    <a href="index.html">📊 Điều hành tuần</a>
+    <a href="hangtau.html">🚢 Hãng tàu</a>
+    <a href="tacnghiep.html" class="active">⚙️ Tác nghiệp</a>
+    <a href="kehoach.html">📅 Kế hoạch vs Thực hiện</a>
+    <a href="#">🏗 Depot</a>
+    <a href="#">👔 Executive</a>
+  </div>
+</div>
+
+<div class="main">
+<div class="header">
+  <h1>Màn hình 3 - Phân tích Tác Nghiệp</h1>
+  <div class="header-right">
+    <button onclick="refreshData()">🔄 Cập nhật dữ liệu</button>
+    <div id="lastUpdate">Đang tải dữ liệu...</div>
+  </div>
+</div>
+
+<div class="filters">
+  <select id="filterNam"></select>
+  <select id="filterLoai">
+    <option value="week">Theo tuần</option>
+    <option value="month">Theo tháng</option>
+    <option value="quarter">Theo quý</option>
+    <option value="year">Theo năm</option>
+  </select>
+  <select id="filterKy"></select>
+  <select id="filterHangTau"><option value="">Tất cả hãng tàu</option></select>
+  <select id="filterDepot"><option value="">Tất cả Depot</option></select>
+</div>
+
+<div class="kpi-grid">
+  <div class="card"><div class="kpi-title">Tổng TEU KPI</div><div class="kpi-value" id="kpiTeu">0</div><div class="kpi-sub">Không tính Xuất tàu</div></div>
+  <div class="card"><div class="kpi-title">Tổng CONT KPI</div><div class="kpi-value" id="kpiCont">0</div><div class="kpi-sub">Không tính Xuất tàu</div></div>
+  <div class="card"><div class="kpi-title">Xuất tàu vỏ E</div><div class="kpi-value" id="kpiXuatVo">0</div><div class="kpi-sub">TEU</div></div>
+  <div class="card"><div class="kpi-title">Xuất tàu hàng F</div><div class="kpi-value" id="kpiXuatHang">0</div><div class="kpi-sub">TEU</div></div>
+</div>
+
+<div class="grid-2">
+  <div class="card"><h3>TEU theo tác nghiệp</h3><canvas id="chartTeu"></canvas></div>
+  <div class="card"><h3>CONT theo tác nghiệp</h3><canvas id="chartCont"></canvas></div>
+</div>
+
+<div class="grid-2">
+  <div class="card"><h3>Cơ cấu TEU theo tác nghiệp</h3><canvas id="chartShare"></canvas></div>
+  <div class="card">
+    <h3>Ghi chú</h3>
+    <div class="note">
+      <b>KPI chính:</b> Hạ vỏ, Cấp vỏ, Hạ hàng, Giao hàng.<br>
+      <b>Xuất tàu</b> được tách riêng:<br>
+      • Xuất tàu vỏ = XUẤT TÀU VỎ<br>
+      • Xuất tàu hàng = XUẤT TÀU HÀNG
+    </div>
+  </div>
+</div>
+
+<div class="card">
+  <h3>Bảng chi tiết tác nghiệp</h3>
+  <table>
+    <thead><tr><th>Tác nghiệp</th><th>TEU</th><th>CONT</th><th>KPI TEU</th><th>KPI CONT</th><th>Tỷ trọng TEU</th></tr></thead>
+    <tbody id="tableTacNghiep"></tbody>
+  </table>
+</div>
+
+<div class="card">
+  <h3>Xu hướng 52 tuần theo tác nghiệp</h3>
+  <canvas id="chartTrend"></canvas>
+</div>
+</div>
+</div>
+
+<script>
+const API_URL="https://script.google.com/macros/s/AKfycbxKAiACF9obGc3dkDO5VLfR3NeFRKok0O3B8yqzXsuXhU93qVfnDZzqaVkZR2tAgffy/exec";
+let DATA={},chartTeu=null,chartCont=null,chartShare=null,chartTrend=null;
+
+const TAC_LIST=["HẠ VỎ","CẤP VỎ","HẠ HÀNG","GIAO HÀNG","XUẤT TÀU VỎ","XUẤT TÀU HÀNG"];
+const KPI_ONLY=["HẠ VỎ","CẤP VỎ","HẠ HÀNG","GIAO HÀNG"];
+
+const valueLabelPlugin={id:"valueLabelPlugin",afterDatasetsDraw(chart){const{ctx}=chart;chart.data.datasets.forEach((ds,di)=>{const meta=chart.getDatasetMeta(di);if(meta.hidden)return;meta.data.forEach((bar,i)=>{const v=ds.data[i];if(Number(v)>0&&bar.x&&bar.y){ctx.save();ctx.fillStyle="#111827";ctx.font="bold 12px Arial";ctx.textAlign="center";ctx.textBaseline="bottom";ctx.fillText(Number(v).toLocaleString("vi-VN"),bar.x,bar.y-6);ctx.restore();}})})}};
+function n(v){return Number(v)||0}
+function fmt(v){return Number(v||0).toLocaleString("vi-VN")}
+function pct(a,b){return b?a/b*100:0}
+function tx(v){return String(v||"").trim().toUpperCase()}
+function qOfMonth(m){m=n(m);if(m<=3)return"Q1";if(m<=6)return"Q2";if(m<=9)return"Q3";return"Q4"}
+
+function initFilters(){
+  const rows=DATA.API_TACNGHIEP_SUMMARY||[];
+  const years=[...new Set(rows.map(r=>n(r.NAM)))].filter(Boolean).sort((a,b)=>a-b);
+  const lines=[...new Set(rows.map(r=>r.HANG_TAU).concat((DATA.DM_HANG_TAU||[]).map(r=>r.HANG_TAU)))].filter(Boolean).sort();
+  const depots=[...new Set(rows.map(r=>r.DEPOT))].filter(Boolean).sort();
+
+  filterNam.innerHTML=years.map(y=>`<option value="${y}">Năm ${y}</option>`).join("");
+  filterHangTau.innerHTML=`<option value="">Tất cả hãng tàu</option>`+lines.map(h=>`<option value="${h}">${h}</option>`).join("");
+  filterDepot.innerHTML=`<option value="">Tất cả Depot</option>`+depots.map(d=>`<option value="${d}">${d}</option>`).join("");
+  filterNam.value=years[0]||"";
+
+  ["filterNam","filterLoai","filterKy","filterHangTau","filterDepot"].forEach(id=>{
+    document.getElementById(id).addEventListener("change",()=>{if(id==="filterNam"||id==="filterLoai")fillKyFilter();updateDashboard();});
+  });
+  fillKyFilter();
+}
+
+function fillKyFilter(){
+  const nam=n(filterNam.value),loai=filterLoai.value,rows=DATA.API_TACNGHIEP_SUMMARY||[];
+  let html="";
+  if(loai==="week"){
+    const weeks=[...new Set(rows.filter(r=>n(r.NAM)===nam).map(r=>n(r.TUAN)))].filter(Boolean).sort((a,b)=>a-b);
+    html=weeks.map(w=>`<option value="${w}">Tuần ${w}</option>`).join("");
+  }
+  if(loai==="month"){
+    const months=[...new Set(rows.filter(r=>n(r.NAM)===nam).map(r=>n(r.THANG)))].filter(Boolean).sort((a,b)=>a-b);
+    html=months.map(m=>`<option value="${m}">Tháng ${m}</option>`).join("");
+  }
+  if(loai==="quarter") html=["Q1","Q2","Q3","Q4"].map(q=>`<option value="${q}">${q}</option>`).join("");
+  if(loai==="year") html=`<option value="${nam}">Cả năm ${nam}</option>`;
+  filterKy.innerHTML=html;
+}
+
+function getSelected(){return{nam:n(filterNam.value),loai:filterLoai.value,ky:filterKy.value,hangTau:filterHangTau.value,depot:filterDepot.value}}
+
+function getRows(sel){
+  return (DATA.API_TACNGHIEP_SUMMARY||[]).filter(r=>{
+    if(n(r.NAM)!==sel.nam)return false;
+    if(sel.hangTau&&r.HANG_TAU!==sel.hangTau)return false;
+    if(sel.depot&&r.DEPOT!==sel.depot)return false;
+    if(sel.loai==="week")return n(r.TUAN)===n(sel.ky);
+    if(sel.loai==="month")return n(r.THANG)===n(sel.ky);
+    if(sel.loai==="quarter")return qOfMonth(r.THANG)===sel.ky;
+    if(sel.loai==="year")return true;
+    return false;
+  });
+}
+
+function updateDashboard(){
+  const rows=getRows(getSelected());
+  const teu={},cont={},kpiTeu={},kpiCont={};
+  TAC_LIST.forEach(t=>{teu[t]=0;cont[t]=0;kpiTeu[t]=0;kpiCont[t]=0});
+  rows.forEach(r=>{
+    const t=tx(r.TAC_NGHIEP_GROUP);
+    if(teu[t]!==undefined){teu[t]+=n(r.TEU);cont[t]+=n(r.CONT);kpiTeu[t]+=n(r.KPI_TEU);kpiCont[t]+=n(r.KPI_CONT)}
+  });
+
+  const totalKpiTeu = KPI_ONLY.reduce((s,t)=>s+(kpiTeu[t]||0),0);
+const totalKpiCont = KPI_ONLY.reduce((s,t)=>s+(kpiCont[t]||0),0);
+
+document.getElementById("kpiTeu").innerText = fmt(totalKpiTeu);
+document.getElementById("kpiCont").innerText = fmt(totalKpiCont);
+  kpiXuatVo.innerText=fmt(teu["XUẤT TÀU VỎ"]);
+  kpiXuatHang.innerText=fmt(teu["XUẤT TÀU HÀNG"]);
+
+  renderCharts(teu,cont);
+  renderTable(teu,cont,kpiTeu,kpiCont);
+  renderTrend(getSelected());
+}
+
+function renderCharts(teu,cont){
+  if(chartTeu)chartTeu.destroy();
+  chartTeu=new Chart(chartTeuEl=document.getElementById("chartTeu"),{type:"bar",data:{labels:TAC_LIST,datasets:[{label:"TEU",data:TAC_LIST.map(t=>teu[t]||0),borderRadius:8}]},options:{responsive:true,layout:{padding:{top:28}},scales:{y:{beginAtZero:true}}},plugins:[valueLabelPlugin]});
+  if(chartCont)chartCont.destroy();
+  chartCont=new Chart(document.getElementById("chartCont"),{type:"bar",data:{labels:TAC_LIST,datasets:[{label:"CONT",data:TAC_LIST.map(t=>cont[t]||0),borderRadius:8}]},options:{responsive:true,layout:{padding:{top:28}},scales:{y:{beginAtZero:true}}},plugins:[valueLabelPlugin]});
+  if(chartShare)chartShare.destroy();
+  chartShare=new Chart(document.getElementById("chartShare"),{type:"pie",data:{labels:TAC_LIST,datasets:[{data:TAC_LIST.map(t=>teu[t]||0)}]},options:{responsive:true,plugins:{legend:{position:"bottom"}}}});
+}
+
+function renderTable(teu,cont,kpiTeu,kpiCont){
+  const total=TAC_LIST.reduce((s,t)=>s+teu[t],0);
+  let html=TAC_LIST.map(t=>`<tr><td><b>${t}</b></td><td>${fmt(teu[t])}</td><td>${fmt(cont[t])}</td><td>${fmt(kpiTeu[t])}</td><td>${fmt(kpiCont[t])}</td><td>${pct(teu[t],total).toFixed(1)}%</td></tr>`).join("");
+  html+=`<tr><td><b>TỔNG</b></td><td><b>${fmt(total)}</b></td><td><b>${fmt(TAC_LIST.reduce((s,t)=>s+cont[t],0))}</b></td><td><b>${fmt(TAC_LIST.reduce((s,t)=>s+kpiTeu[t],0))}</b></td><td><b>${fmt(TAC_LIST.reduce((s,t)=>s+kpiCont[t],0))}</b></td><td><b>100%</b></td></tr>`;
+  tableTacNghiep.innerHTML=html;
+}
+
+function renderTrend(sel){
+  const weeks=[...new Set((DATA.API_TACNGHIEP_SUMMARY||[]).filter(r=>n(r.NAM)===sel.nam).map(r=>n(r.TUAN)))].filter(Boolean).sort((a,b)=>a-b);
+  const datasets=TAC_LIST.map(t=>({label:t,data:weeks.map(w=>(DATA.API_TACNGHIEP_SUMMARY||[]).filter(r=>n(r.NAM)===sel.nam&&n(r.TUAN)===w&&tx(r.TAC_NGHIEP_GROUP)===t&&(!sel.hangTau||r.HANG_TAU===sel.hangTau)&&(!sel.depot||r.DEPOT===sel.depot)).reduce((s,r)=>s+n(r.TEU),0)),tension:.3}));
+  if(chartTrend)chartTrend.destroy();
+  chartTrend=new Chart(document.getElementById("chartTrend"),{type:"line",data:{labels:weeks.map(w=>"Tuần "+w),datasets},options:{responsive:true,plugins:{legend:{position:"bottom"}},scales:{y:{beginAtZero:true}}}});
+}
+
+function loadData(){
+  fetch(API_URL).then(res=>res.json()).then(json=>{
+    DATA=json;
+    if(!DATA.API_TACNGHIEP_SUMMARY){alert("API chưa có API_TACNGHIEP_SUMMARY.");return;}
+    lastUpdate.innerText="Cập nhật: "+new Date().toLocaleString("vi-VN");
+    initFilters();updateDashboard();
+  }).catch(err=>{lastUpdate.innerHTML="<span style='color:red'>Lỗi đọc dữ liệu API</span>";console.error(err);});
+}
+function refreshData(){loadData()}
+loadData();
+</script>
+</body>
+</html>
