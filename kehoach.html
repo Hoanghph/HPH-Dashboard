@@ -44,7 +44,7 @@ th{background:#052b55;color:white}
 .bg-warn{background:#fef9c3;color:#854d0e}
 .bg-bad{background:#fee2e2;color:#991b1b}
 canvas{max-height:460px}
-.chart-box{height:500px}
+#chartMonth{height:430px!important}
 .chart-legend-custom{display:flex;justify-content:center;gap:30px;margin:8px 0 18px 0;font-size:14px;font-weight:700;color:#555}
 .chart-legend-custom span{display:flex;align-items:center;gap:8px}
 .chart-legend-custom i{width:18px;height:12px;display:inline-block;border-radius:3px}
@@ -74,7 +74,7 @@ canvas{max-height:460px}
     <a href="hangtau.html">🚢 Hãng tàu</a>
     <a href="tacnghiep.html">⚙️ Tác nghiệp</a>
     <a href="kehoach.html" class="active">📅 Kế hoạch vs Thực hiện</a>
-    <a href="#">🏗 Depot</a>
+    <a href="depot.html">🏗 Depot Control</a>
     <a href="#">👔 Executive</a>
   </div>
 </div>
@@ -137,7 +137,7 @@ canvas{max-height:460px}
       <span><i class="legend-plan"></i>Kế hoạch TEU</span>
       <span><i class="legend-actual"></i>Thực hiện TEU</span>
     </div>
-    <div class="chart-box">
+    <div style="height:500px;">
       <canvas id="chartMonth"></canvas>
     </div>
   </div>
@@ -380,8 +380,12 @@ function getSummaryRows(sel){
 }
 
 function getTitleText(sel){
-  if(sel.loai==="month") return "Kế hoạch vs Thực hiện - Theo tháng đã chọn";
-  if(sel.loai==="quarter") return "Kế hoạch vs Thực hiện - Theo " + sel.quarter;
+  if(sel.loai==="month"){
+    return "Kế hoạch vs Thực hiện - Theo tháng đã chọn";
+  }
+  if(sel.loai==="quarter"){
+    return "Kế hoạch vs Thực hiện - Theo " + sel.quarter;
+  }
   return "Kế hoạch vs Thực hiện - Năm " + sel.nam;
 }
 

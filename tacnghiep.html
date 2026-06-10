@@ -41,7 +41,7 @@ canvas{max-height:420px}
     <a href="hangtau.html">🚢 Hãng tàu</a>
     <a href="tacnghiep.html" class="active">⚙️ Tác nghiệp</a>
     <a href="kehoach.html">📅 Kế hoạch vs Thực hiện</a>
-    <a href="#">🏗 Depot</a>
+    <a href="depot.html">🏗 Depot Control</a>
     <a href="#">👔 Executive</a>
   </div>
 </div>
@@ -179,11 +179,10 @@ function updateDashboard(){
     if(teu[t]!==undefined){teu[t]+=n(r.TEU);cont[t]+=n(r.CONT);kpiTeu[t]+=n(r.KPI_TEU);kpiCont[t]+=n(r.KPI_CONT)}
   });
 
-  const totalKpiTeu = KPI_ONLY.reduce((s,t)=>s+(kpiTeu[t]||0),0);
-const totalKpiCont = KPI_ONLY.reduce((s,t)=>s+(kpiCont[t]||0),0);
-
-document.getElementById("kpiTeu").innerText = fmt(totalKpiTeu);
-document.getElementById("kpiCont").innerText = fmt(totalKpiCont);
+  kpiTeuEl = KPI_ONLY.reduce((s,t)=>s+teu[t],0);
+  kpiContEl = KPI_ONLY.reduce((s,t)=>s+cont[t],0);
+  kpiTeu.innerText=fmt(kpiTeuEl);
+  kpiCont.innerText=fmt(kpiContEl);
   kpiXuatVo.innerText=fmt(teu["XUẤT TÀU VỎ"]);
   kpiXuatHang.innerText=fmt(teu["XUẤT TÀU HÀNG"]);
 
