@@ -106,7 +106,19 @@ let DATA = {}, chartAging=null, chartEmptyFull=null, chartLineStock=null;
 const AGE_BUCKETS=["0-30","31-60","61-90","91-120",">120"], LINES=["HAS","WHL","CKL","SKR","CHP","SOC"];
 function n(v){return Number(v)||0} function fmt(v){return Number(v||0).toLocaleString("vi-VN")} function tx(v){return String(v||"").trim().toUpperCase()}
 function sizeGroup(v){const s=String(v||"").trim(); if(s==="20")return"20"; if(s==="40"||s==="45")return"40"; return s||"KHAC"}
-function getLine(r){return tx(r.HANG_TAU||r.LINE||r.HANG||r["Hãng tàu"]||r["Hang Cont"])}
+function normalizeLine(s){
+  s = tx(s);
+
+  if(s.startsWith("CHP")) return "CHP";
+  if(s.startsWith("HAS")) return "HAS";
+  if(s.startsWith("WHL")) return "WHL";
+  if(s.startsWith("CKL")) return "CKL";
+  if(s.startsWith("SKR")) return "SKR";
+  if(s.startsWith("SOC")) return "SOC";
+
+  return s;
+}
+function getLine(r){return normalizeLine(r.HANG_TAU||r.LINE||r.HANG||r["Hãng tàu"]||r["Hang Cont"])}
 function getDepot(r){return tx(r.BAI||r.DEPOT||r.YARD||r["Yard Code"]||r["Bãi"])}
 function getEF(r){return tx(r.EF||r.EMPTY_FULL||r["Empty/Full"])}
 function getSize(r){return sizeGroup(r.SIZE||r.CNTR_SIZE||r["CNTR Size"])}
