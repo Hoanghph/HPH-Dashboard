@@ -2,57 +2,204 @@
 <html lang="vi">
 <head>
 <meta charset="UTF-8">
-<title>HPH Logistics - Executive Dashboard V3</title>
+<title>HPH Logistics - Depot Control Tower</title>
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 <style>
-*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:#eef3f8;color:#1f2937}.app{display:flex;min-height:100vh}.sidebar{width:240px;background:#052b55;color:white;padding:22px;position:fixed;height:100vh;overflow:auto}.logo{font-size:22px;font-weight:800;margin-bottom:26px;line-height:1.25}.logo small{font-size:13px;opacity:.8}.menu a{display:block;text-decoration:none;color:white;padding:13px;border-radius:10px;margin-bottom:8px;background:rgba(255,255,255,.08)}.menu a.active{background:#0d6efd}.menu a:hover{background:#2563eb}.main{margin-left:240px;padding:22px;width:calc(100% - 240px)}.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:12px}.header h1{margin:0;color:#052b55;font-size:28px}.header small{color:#64748b}button{padding:10px 14px;border:0;border-radius:10px;background:#0d6efd;color:white;font-weight:700;cursor:pointer}button:hover{background:#0757cf}.filters{display:grid;grid-template-columns:150px 150px 170px 170px 1fr;gap:12px;margin-bottom:16px}select{padding:11px;border:1px solid #cbd5e1;border-radius:10px;background:white;min-width:0}.card{background:white;border-radius:16px;padding:16px;box-shadow:0 4px 14px rgba(0,0,0,.08);margin-bottom:18px}.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:18px}.kpi-title{font-size:13px;color:#64748b;text-transform:uppercase}.kpi-value{font-size:30px;font-weight:800;color:#0d6efd;margin-top:8px}.kpi-sub{font-size:13px;color:#64748b;margin-top:5px}.grid-2{display:grid;grid-template-columns:1.35fr 1fr;gap:18px}.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px}table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:10px;border-bottom:1px solid #e5e7eb;text-align:right;vertical-align:middle}th:first-child,td:first-child{text-align:left}th{background:#052b55;color:white}.table-wrap{overflow:auto;max-height:520px}.ok{color:#16a34a!important;font-weight:700}.warn{color:#ca8a04!important;font-weight:700}.bad{color:#dc2626!important;font-weight:700}.neutral{color:#334155!important;font-weight:700}.badge{padding:4px 8px;border-radius:999px;font-size:12px;font-weight:700;white-space:nowrap}.bg-ok{background:#dcfce7;color:#166534}.bg-warn{background:#fef9c3;color:#854d0e}.bg-bad{background:#fee2e2;color:#991b1b}.bg-neutral{background:#e2e8f0;color:#334155}.alert{padding:12px;border-radius:12px;margin-bottom:10px;background:#f8fafc;border-left:5px solid #94a3b8}.alert.red{border-color:#ef4444}.alert.yellow{border-color:#facc15}.alert.green{border-color:#22c55e}.alert.blue{border-color:#0d6efd}.insight{background:linear-gradient(135deg,#052b55,#0d6efd);color:white;border-radius:16px;padding:16px;margin-bottom:18px}.insight h3{margin:0 0 8px 0}.insight ul{margin:8px 0 0 18px;padding:0;line-height:1.75}.small-note{color:#64748b;font-size:13px;margin-top:-8px;margin-bottom:12px}canvas{max-height:390px}.last-update{font-size:13px;color:#64748b}.empty{padding:16px;text-align:center;color:#64748b}@media(max-width:1200px){.kpi-grid{grid-template-columns:repeat(3,1fr)}.grid-2,.grid-3{grid-template-columns:1fr}}@media(max-width:900px){.sidebar{position:relative;width:100%;height:auto}.app{display:block}.main{margin-left:0;width:100%}.filters,.kpi-grid{grid-template-columns:1fr}}
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#eef3f8;color:#1f2937}
+.app{display:flex;min-height:100vh}
+.sidebar{width:240px;background:#052b55;color:white;padding:22px;position:fixed;height:100vh;overflow:auto}
+.logo{font-size:22px;font-weight:800;margin-bottom:26px;line-height:1.25}
+.menu a{display:block;text-decoration:none;color:white;padding:13px;border-radius:10px;margin-bottom:8px;background:rgba(255,255,255,.08)}
+.menu a.active{background:#0d6efd}.menu a:hover{background:#2563eb}
+.main{margin-left:240px;padding:22px;width:calc(100% - 240px)}
+.header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;gap:12px}
+.header h1{margin:0;color:#052b55;font-size:28px}.header small{color:#64748b}
+button{padding:10px 14px;border:0;border-radius:10px;background:#0d6efd;color:white;font-weight:700;cursor:pointer}
+.filters{display:grid;grid-template-columns:170px 170px 170px 170px 1fr;gap:12px;margin-bottom:16px}
+select{padding:11px;border:1px solid #cbd5e1;border-radius:10px;background:white}
+.kpi-grid{display:grid;grid-template-columns:repeat(6,1fr);gap:14px;margin-bottom:18px}
+.card{background:white;border-radius:16px;padding:16px;box-shadow:0 4px 14px rgba(0,0,0,.08);margin-bottom:18px}
+.kpi-title{font-size:13px;color:#64748b;text-transform:uppercase}.kpi-value{font-size:30px;font-weight:800;color:#0d6efd;margin-top:8px}.kpi-sub{font-size:13px;color:#64748b;margin-top:5px}
+.grid-2{display:grid;grid-template-columns:1.2fr 1fr;gap:18px}.grid-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:18px}
+table{width:100%;border-collapse:collapse;font-size:14px}th,td{padding:10px;border-bottom:1px solid #e5e7eb;text-align:right;vertical-align:middle}th:first-child,td:first-child{text-align:left}th{background:#052b55;color:white}
+.table-wrap{overflow:auto;max-height:520px}.ok{color:#16a34a;font-weight:700}.warn{color:#ca8a04;font-weight:700}.bad{color:#dc2626;font-weight:700}
+.alert{padding:12px;border-radius:12px;margin-bottom:10px;background:#f8fafc;border-left:5px solid #94a3b8}.alert.red{border-color:#ef4444}.alert.yellow{border-color:#facc15}.alert.green{border-color:#22c55e}.alert.blue{border-color:#0d6efd}
+.small-note{color:#64748b;font-size:13px;margin-top:-8px;margin-bottom:12px}
+.progress-bg{height:18px;background:#e2e8f0;border-radius:999px;overflow:hidden}.progress-fill{height:100%;border-radius:999px;background:#22c55e}.progress-fill.yellow{background:#facc15}.progress-fill.red{background:#ef4444}
+canvas{max-height:390px}.last-update{font-size:13px;color:#64748b}
+@media(max-width:1200px){.kpi-grid{grid-template-columns:repeat(3,1fr)}.grid-2,.grid-3{grid-template-columns:1fr}}
+@media(max-width:900px){.sidebar{position:relative;width:100%;height:auto}.app{display:block}.main{margin-left:0;width:100%}.filters,.kpi-grid{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
-<div class="app"><div class="sidebar"><div class="logo">HPH LOGISTICS<br><small>Dashboard V3</small></div><div class="menu"><a href="index.html">🏠 Điều hành</a><a href="hangtau.html">🚢 Hãng tàu</a><a href="tacnghiep.html">⚙️ Tác nghiệp</a><a href="kehoach.html">📅 Kế hoạch</a><a href="depot.html">🏗 Depot</a><a class="active" href="executive.html">👔 Executive</a></div></div>
-<div class="main"><div class="header"><div><h1>Executive Dashboard V3</h1><small>Ban Giám đốc - KPI tổng hợp, Forecast, cảnh báo điều hành, sản lượng không tính Xuất tàu</small></div><div><button onclick="loadData()">🔄 Cập nhật</button><div class="last-update" id="lastUpdate">Đang tải dữ liệu...</div></div></div>
-<div class="filters"><select id="filterYear"></select><select id="filterPeriod"><option value="year">Năm</option><option value="quarter">Quý</option><option value="month">Tháng</option></select><select id="filterQuarter"><option value="Q1">Q1</option><option value="Q2">Q2</option><option value="Q3">Q3</option><option value="Q4">Q4</option></select><select id="filterMonth"></select><button onclick="resetFilters()">Reset bộ lọc</button></div>
-<div class="insight"><h3>📌 Executive Insight</h3><ul id="aiInsight"><li>Đang phân tích dữ liệu...</li></ul></div>
-<div class="kpi-grid"><div class="card"><div class="kpi-title">📦 KPI TEU</div><div class="kpi-value" id="kpiTeu">0</div><div class="kpi-sub">Không tính Xuất tàu</div></div><div class="card"><div class="kpi-title">📦 KPI CONT</div><div class="kpi-value" id="kpiCont">0</div><div class="kpi-sub">Không tính Xuất tàu</div></div><div class="card"><div class="kpi-title">🎯 Kế hoạch TEU</div><div class="kpi-value" id="kpiPlan">0</div><div class="kpi-sub">Theo kỳ chọn</div></div><div class="card"><div class="kpi-title">📈 % Hoàn thành</div><div class="kpi-value" id="kpiRate">0%</div><div class="kpi-sub">KPI TEU / KH</div></div><div class="card"><div class="kpi-title">🔮 Forecast năm</div><div class="kpi-value" id="kpiForecast">0</div><div class="kpi-sub">TH + KH còn lại</div></div><div class="card"><div class="kpi-title">📊 Thiếu / Vượt</div><div class="kpi-value" id="kpiGap">0</div><div class="kpi-sub">TEU</div></div></div>
-<div class="grid-2"><div class="card"><h3>Kế hoạch vs Thực hiện theo hãng tàu</h3><div class="small-note">Thực hiện = KPI_TEU, đã loại bỏ Xuất tàu.</div><canvas id="chartCarrier"></canvas></div><div class="card"><h3>Cảnh báo điều hành</h3><div id="alertBox"></div></div></div>
-<div class="grid-3"><div class="card"><h3>Xu hướng KPI TEU theo tháng</h3><canvas id="chartTrend"></canvas></div><div class="card"><h3>Cơ cấu sản lượng theo hãng</h3><canvas id="chartShare"></canvas></div><div class="card"><h3>Top KPI cần quan tâm</h3><div class="table-wrap"><table><thead><tr><th>KPI</th><th>Giá trị</th><th>Trạng thái</th></tr></thead><tbody id="tableTopKpi"></tbody></table></div></div></div>
-<div class="grid-2"><div class="card"><h3>Bảng điều hành theo hãng tàu</h3><div class="table-wrap"><table><thead><tr><th>Hãng</th><th>KH TEU</th><th>KPI TEU</th><th>%</th><th>Thiếu/Vượt</th><th>KPI CONT</th></tr></thead><tbody id="tableCarrier"></tbody></table></div></div><div class="card"><h3>Depot Control Summary</h3><div class="table-wrap"><table><thead><tr><th>Depot</th><th>CONT</th><th>TEU</th><th>Empty</th><th>Full</th></tr></thead><tbody id="tableDepot"></tbody></table></div></div></div>
-</div></div>
+<div class="app">
+<div class="sidebar">
+  <div class="logo">HPH LOGISTICS<br><small>Dashboard V3</small></div>
+  <div class="menu">
+    <a href="index.html">🏠 Điều hành</a>
+    <a href="hangtau.html">🚢 Hãng tàu</a>
+    <a href="tacnghiep.html">⚙️ Tác nghiệp</a>
+    <a href="kehoach.html">📅 Kế hoạch</a>
+    <a class="active" href="depot.html">🏗 Depot</a>
+    <a href="executive.html">👔 Executive</a>
+  </div>
+</div>
+
+<div class="main">
+  <div class="header">
+    <div>
+      <h1>Depot Control Tower</h1>
+      <small>Tồn bãi, Aging, Empty/Full, Capacity và Cảnh báo điều hành</small>
+    </div>
+    <div>
+      <button onclick="loadData()">🔄 Cập nhật</button>
+      <div class="last-update" id="lastUpdate">Đang tải dữ liệu...</div>
+    </div>
+  </div>
+
+  <div class="filters">
+    <select id="filterDepot"><option value="">Tất cả bãi</option></select>
+    <select id="filterLine"><option value="">Tất cả hãng tàu</option></select>
+    <select id="filterEF"><option value="">Hàng + Vỏ</option><option value="E">Vỏ / Empty</option><option value="F">Hàng / Full</option></select>
+    <select id="filterSize"><option value="">Tất cả size</option><option value="20">20</option><option value="40">40/45</option></select>
+    <button onclick="resetFilters()">Reset bộ lọc</button>
+  </div>
+
+  <div class="kpi-grid">
+    <div class="card"><div class="kpi-title">📦 Tổng CONT</div><div class="kpi-value" id="kpiCont">0</div><div class="kpi-sub">Container tồn</div></div>
+    <div class="card"><div class="kpi-title">📦 Tổng TEU</div><div class="kpi-value" id="kpiTeu">0</div><div class="kpi-sub">Quy đổi TEU</div></div>
+    <div class="card"><div class="kpi-title">🟢 Vỏ Empty</div><div class="kpi-value" id="kpiEmpty">0</div><div class="kpi-sub">CONT E</div></div>
+    <div class="card"><div class="kpi-title">🔴 Hàng Full</div><div class="kpi-value" id="kpiFull">0</div><div class="kpi-sub">CONT F</div></div>
+    <div class="card"><div class="kpi-title">🏗 Utilization</div><div class="kpi-value" id="kpiUtil">0%</div><div class="kpi-sub">Theo MAX_TEU</div></div>
+    <div class="card"><div class="kpi-title">🅿️ Còn TEU</div><div class="kpi-value" id="kpiRemain">0</div><div class="kpi-sub">Remaining TEU</div></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card"><h3>Aging tồn bãi theo nhóm ngày</h3><div class="small-note">Hiển thị số CONT trực tiếp trên từng cột.</div><canvas id="chartAging"></canvas></div>
+    <div class="card"><h3>Cảnh báo điều hành</h3><div id="alertBox"></div></div>
+  </div>
+
+  <div class="grid-3">
+    <div class="card"><h3>Empty / Full theo hãng tàu</h3><canvas id="chartEmptyFull"></canvas></div>
+    <div class="card"><h3>Tồn theo hãng tàu</h3><canvas id="chartLineStock"></canvas></div>
+    <div class="card"><h3>Capacity theo bãi</h3><div class="table-wrap"><table><thead><tr><th>Bãi</th><th>TEU</th><th>MAX</th><th>Util</th><th>Còn TEU</th></tr></thead><tbody id="tableCapacity"></tbody></table></div></div>
+  </div>
+
+  <div class="grid-2">
+    <div class="card">
+      <h3>Aging theo hãng tàu</h3>
+      <div class="table-wrap"><table><thead><tr><th>Hãng</th><th>0-30</th><th>31-60</th><th>61-90</th><th>91-120</th><th>&gt;120</th><th>Tổng</th></tr></thead><tbody id="tableAgingLine"></tbody></table></div>
+    </div>
+    <div class="card">
+      <h3>Phân loại hàng / vỏ theo hãng</h3>
+      <div class="table-wrap"><table><thead><tr><th>Hãng</th><th>Empty</th><th>Full</th><th>TEU</th><th>CONT</th></tr></thead><tbody id="tableLineEF"></tbody></table></div>
+    </div>
+  </div>
+</div>
+</div>
+
 <script>
-const API_URL="https://script.google.com/macros/s/AKfycbxKAiACF9obGc3dkDO5VLfR3NeFRKok0O3B8yqzXsuXhU93qVfnDZzqaVkZR2tAgffy/exec";
-const API_DEPOT_URL="https://script.google.com/macros/s/AKfycbxqXRAlVvWAM5icHWwJJwi2Gofn7cwGWfLskx6L--2_0rE9t7ZOKPP7ee-bT0_LZQSjeA/exec";
-let DATA={},DEPOT={},chartCarrier=null,chartTrend=null,chartShare=null;
-const LINE_ORDER=["HAS","WHL","CKL","SKR","CHP","SOC"];
-const KPI_OPS=["HẠ HÀNG","GIAO HÀNG","HẠ VỎ","CẤP VỎ"];
-function n(v){return Number(v)||0}function fmt(v){return Number(v||0).toLocaleString("vi-VN")}function pct(a,b){return b?a/b*100:0}function tx(v){return String(v||"").trim().toUpperCase()}function clsRate(r){return r>=100?"ok":r>=90?"warn":"bad"}function badgeRate(r){return r>=100?"bg-ok":r>=90?"bg-warn":"bg-bad"}
-function normalizeLine(s){s=tx(s);if(s.startsWith("CHP"))return"CHP";if(s.startsWith("HAS"))return"HAS";if(s.startsWith("WHL"))return"WHL";if(s.startsWith("CKL"))return"CKL";if(s.startsWith("SKR"))return"SKR";if(s.startsWith("SOC"))return"SOC";return s||"KHÁC"}
-function normalizeOps(v){const s=tx(v);if(s.includes("XUẤT"))return"XUẤT TÀU";if(s.includes("HẠ HÀNG"))return"HẠ HÀNG";if(s.includes("GIAO HÀNG"))return"GIAO HÀNG";if(s.includes("HẠ VỎ"))return"HẠ VỎ";if(s.includes("CẤP VỎ"))return"CẤP VỎ";return s}
-function isKpiOps(v){return KPI_OPS.includes(normalizeOps(v))}
-function getSizeTeu(r){const size=String(r.SIZE||r.CNTR_SIZE||r["Size"]||"").toUpperCase();if(size.includes("20"))return 1;if(size.includes("40")||size.includes("45"))return 2;return n(r.TEU)||n(r.KPI_TEU)||0}
-function getActualSourceRows(){if(DATA.DATA_MODEL&&DATA.DATA_MODEL.length)return DATA.DATA_MODEL;if(DATA.API_MONTH_SUMMARY&&DATA.API_MONTH_SUMMARY.length)return DATA.API_MONTH_SUMMARY;return[]}
-function getYear(r){return n(r.NAM||r.YEAR)}function getMonth(r){return n(r.THANG||r.MONTH)}function getLine(r){return normalizeLine(r.HANG_TAU||r.LINE||r.HANG||r["Hãng tàu"])}function getOps(r){return normalizeOps(r.TAC_NGHIEP||r.TAC_NGHIEP_GROUP||r.OPERATION||r["Tác nghiệp"])}
-function getKpiTeu(r){if(r.KPI_TEU!==undefined&&r.KPI_TEU!=="")return n(r.KPI_TEU);const ops=getOps(r);if(!isKpiOps(ops))return 0;if(r.TEU!==undefined&&r.TEU!=="")return n(r.TEU);return getSizeTeu(r)}
-function getKpiCont(r){if(r.KPI_CONT!==undefined&&r.KPI_CONT!=="")return n(r.KPI_CONT);const ops=getOps(r);if(ops&&!isKpiOps(ops))return 0;if(r.CONT!==undefined&&r.CONT!=="")return n(r.CONT);if(r.CNTRNO||r.CNTR_NO||r["Số cont"])return 1;return 0}
-function getPlanTeu(r){return n(r.KE_HOACH_TEU||r.PLAN_TEU||r.TEU||r.KH_TEU)}
-function periodMonths(){const p=filterPeriod.value;if(p==="year")return[1,2,3,4,5,6,7,8,9,10,11,12];if(p==="quarter"){const q=filterQuarter.value;if(q==="Q1")return[1,2,3];if(q==="Q2")return[4,5,6];if(q==="Q3")return[7,8,9];return[10,11,12]}return[n(filterMonth.value)]}
-function initFilters(){const rows=getActualSourceRows();const years=[...new Set([].concat(rows.map(getYear)).concat((DATA.KE_HOACH_NAM||[]).map(r=>n(r.NAM))).concat((DATA.KE_HOACH_THANG||[]).map(r=>n(r.NAM))))].filter(Boolean).sort((a,b)=>a-b);filterYear.innerHTML=years.map(y=>`<option value="${y}">Năm ${y}</option>`).join("");filterYear.value=years.includes(2026)?2026:(years[years.length-1]||"");filterMonth.innerHTML=[1,2,3,4,5,6,7,8,9,10,11,12].map(m=>`<option value="${m}">Tháng ${m}</option>`).join("");filterMonth.value=new Date().getMonth()+1;["filterYear","filterPeriod","filterQuarter","filterMonth"].forEach(id=>{document.getElementById(id).addEventListener("change",()=>{updateFilterDisplay();updateDashboard()})});updateFilterDisplay()}
-function updateFilterDisplay(){filterQuarter.style.display=filterPeriod.value==="quarter"?"block":"none";filterMonth.style.display=filterPeriod.value==="month"?"block":"none"}function resetFilters(){filterPeriod.value="year";updateFilterDisplay();updateDashboard()}
-function getActualRowsForPeriod(){const year=n(filterYear.value),months=periodMonths();return getActualSourceRows().filter(r=>getYear(r)===year&&months.includes(getMonth(r)))}function getPlanRowsForPeriod(){const year=n(filterYear.value),months=periodMonths();if(filterPeriod.value==="year")return(DATA.KE_HOACH_NAM||[]).filter(r=>n(r.NAM)===year);return(DATA.KE_HOACH_THANG||[]).filter(r=>n(r.NAM)===year&&months.includes(n(r.THANG)))}
-function getYearActualRows(){const year=n(filterYear.value);return getActualSourceRows().filter(r=>getYear(r)===year)}function getYearPlanMonthRows(){const year=n(filterYear.value);return(DATA.KE_HOACH_THANG||[]).filter(r=>n(r.NAM)===year)}
-function sumBy(rows,keyFn,valFn){const m={};rows.forEach(r=>{const k=keyFn(r);m[k]=(m[k]||0)+valFn(r)});return m}function lineList(actualRows,planRows){return[...new Set([].concat(LINE_ORDER).concat(actualRows.map(getLine)).concat(planRows.map(r=>normalizeLine(r.HANG_TAU))))].filter(Boolean)}
-const labelPlugin={id:"labelPlugin",afterDatasetsDraw(chart){const{ctx}=chart;ctx.save();chart.data.datasets.forEach((ds,i)=>{const meta=chart.getDatasetMeta(i);if(meta.hidden)return;meta.data.forEach((el,idx)=>{const v=ds.data[idx];if(v===undefined||v===null||Number(v)===0)return;ctx.fillStyle="#111827";ctx.font="bold 11px Arial";ctx.textAlign="center";ctx.textBaseline="bottom";if(el.x&&el.y)ctx.fillText(Number(v).toLocaleString("vi-VN"),el.x,el.y-6)})});ctx.restore()}};
-function updateDashboard(){const actualRows=getActualRowsForPeriod(),planRows=getPlanRowsForPeriod();const totalTeu=actualRows.reduce((s,r)=>s+getKpiTeu(r),0),totalCont=actualRows.reduce((s,r)=>s+getKpiCont(r),0),totalPlan=planRows.reduce((s,r)=>s+getPlanTeu(r),0),rate=pct(totalTeu,totalPlan),gap=totalTeu-totalPlan,forecast=calcForecastYear();kpiTeu.innerText=fmt(totalTeu);kpiCont.innerText=fmt(totalCont);kpiPlan.innerText=fmt(totalPlan);kpiRate.innerText=rate.toFixed(1)+"%";kpiRate.className="kpi-value "+clsRate(rate);kpiForecast.innerText=fmt(forecast);kpiGap.innerText=(gap>=0?"+":"")+fmt(gap);kpiGap.className="kpi-value "+(gap>=0?"ok":"bad");renderCarrierChart(actualRows,planRows);renderTrend();renderShare(actualRows);renderAlerts(actualRows,planRows,rate,gap,forecast);renderTopKpi(totalTeu,totalPlan,rate,gap,forecast);renderCarrierTable(actualRows,planRows);renderDepotTable();renderInsight(totalTeu,totalPlan,rate,gap,forecast,actualRows,planRows)}
-function calcForecastYear(){const actualRows=getYearActualRows(),planRows=getYearPlanMonthRows();const actualByMonth=sumBy(actualRows,r=>getMonth(r),r=>getKpiTeu(r));const planByMonth=sumBy(planRows,r=>n(r.THANG),r=>getPlanTeu(r));let forecast=0;for(let m=1;m<=12;m++){forecast+=(actualByMonth[m]&&actualByMonth[m]>0)?actualByMonth[m]:(planByMonth[m]||0)}return Math.round(forecast)}
-function renderCarrierChart(actualRows,planRows){const actual=sumBy(actualRows,getLine,getKpiTeu),plan=sumBy(planRows,r=>normalizeLine(r.HANG_TAU),getPlanTeu),labels=lineList(actualRows,planRows);if(chartCarrier)chartCarrier.destroy();chartCarrier=new Chart(document.getElementById("chartCarrier"),{type:"bar",data:{labels,datasets:[{label:"Kế hoạch TEU",data:labels.map(l=>plan[l]||0),borderRadius:8},{label:"KPI TEU",data:labels.map(l=>actual[l]||0),borderRadius:8}]},options:{responsive:true,layout:{padding:{top:24}},plugins:{legend:{position:"bottom"}},scales:{y:{beginAtZero:true,grace:"18%"}}},plugins:[labelPlugin]})}
-function renderTrend(){const year=n(filterYear.value),rows=getActualSourceRows().filter(r=>getYear(r)===year),planRows=(DATA.KE_HOACH_THANG||[]).filter(r=>n(r.NAM)===year),months=[1,2,3,4,5,6,7,8,9,10,11,12];const actual=months.map(m=>rows.filter(r=>getMonth(r)===m).reduce((s,r)=>s+getKpiTeu(r),0)),plan=months.map(m=>planRows.filter(r=>n(r.THANG)===m).reduce((s,r)=>s+getPlanTeu(r),0));if(chartTrend)chartTrend.destroy();chartTrend=new Chart(document.getElementById("chartTrend"),{type:"line",data:{labels:months.map(m=>"T"+m),datasets:[{label:"KPI TEU",data:actual,tension:.35},{label:"KH TEU",data:plan,tension:.35}]},options:{responsive:true,layout:{padding:{top:24}},plugins:{legend:{position:"bottom"}},scales:{y:{beginAtZero:true,grace:"18%"}}},plugins:[labelPlugin]})}
-function renderShare(actualRows){const actual=sumBy(actualRows,getLine,getKpiTeu),labels=lineList(actualRows,[]),total=Object.values(actual).reduce((a,b)=>a+b,0);if(chartShare)chartShare.destroy();chartShare=new Chart(document.getElementById("chartShare"),{type:"bar",data:{labels,datasets:[{label:"Tỷ trọng %",data:labels.map(l=>total?pct(actual[l]||0,total):0),borderRadius:8}]},options:{responsive:true,layout:{padding:{top:24}},plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grace:"18%"}}},plugins:[labelPlugin]})}
-function renderAlerts(actualRows,planRows,rate,gap,forecast){const actual=sumBy(actualRows,getLine,getKpiTeu),plan=sumBy(planRows,r=>normalizeLine(r.HANG_TAU),getPlanTeu),alerts=[];if(rate<90)alerts.push(`<div class="alert red">🔴 Tổng kỳ mới đạt <b>${rate.toFixed(1)}%</b>, thiếu <b>${fmt(Math.abs(gap))} TEU</b>.</div>`);else if(rate<100)alerts.push(`<div class="alert yellow">⚠️ Tổng kỳ đạt <b>${rate.toFixed(1)}%</b>, còn thiếu <b>${fmt(Math.abs(gap))} TEU</b>.</div>`);else alerts.push(`<div class="alert green">🟢 Tổng kỳ vượt kế hoạch <b>+${fmt(Math.max(gap,0))} TEU</b>.</div>`);Object.keys(plan).forEach(line=>{const r=pct(actual[line]||0,plan[line]||0),g=(actual[line]||0)-(plan[line]||0);if(g>=0)alerts.push(`<div class="alert green">🟢 ${line} vượt kế hoạch <b>+${fmt(g)} TEU</b>.</div>`);else if(r<90)alerts.push(`<div class="alert red">🔴 ${line} mới đạt <b>${r.toFixed(1)}%</b>, thiếu <b>${fmt(Math.abs(g))} TEU</b>.</div>`)});alerts.push(`<div class="alert blue">🔮 Forecast năm hiện khoảng <b>${fmt(forecast)} TEU</b>.</div>`);alertBox.innerHTML=alerts.slice(0,8).join("")}
-function renderTopKpi(totalTeu,totalPlan,rate,gap,forecast){const items=[["KPI TEU",fmt(totalTeu),rate>=90?"bg-ok":"bg-bad",rate>=90?"Ổn":"Thấp"],["Hoàn thành KH",rate.toFixed(1)+"%",badgeRate(rate),rate>=100?"Đạt":rate>=90?"Theo dõi":"Cần xử lý"],["Thiếu/Vượt",(gap>=0?"+":"")+fmt(gap)+" TEU",gap>=0?"bg-ok":"bg-bad",gap>=0?"Vượt":"Thiếu"],["Forecast năm",fmt(forecast)+" TEU","bg-neutral","Dự báo"]];tableTopKpi.innerHTML=items.map(i=>`<tr><td><b>${i[0]}</b></td><td>${i[1]}</td><td><span class="badge ${i[2]}">${i[3]}</span></td></tr>`).join("")}
-function renderCarrierTable(actualRows,planRows){const actual=sumBy(actualRows,getLine,getKpiTeu),cont=sumBy(actualRows,getLine,getKpiCont),plan=sumBy(planRows,r=>normalizeLine(r.HANG_TAU),getPlanTeu),labels=lineList(actualRows,planRows);if(!labels.length){tableCarrier.innerHTML=`<tr><td colspan="6" class="empty">Không có dữ liệu</td></tr>`;return}tableCarrier.innerHTML=labels.map(l=>{const kh=plan[l]||0,th=actual[l]||0,r=pct(th,kh),g=th-kh;return`<tr><td><b>${l}</b></td><td>${fmt(kh)}</td><td>${fmt(th)}</td><td class="${clsRate(r)}">${r.toFixed(1)}%</td><td>${g>=0?"+":""}${fmt(g)}</td><td>${fmt(cont[l]||0)}</td></tr>`}).join("")}
-function renderDepotTable(){const rows=DEPOT.API_DEPOT_SUMMARY||[];if(!rows.length){tableDepot.innerHTML=`<tr><td colspan="5" class="empty">Chưa có dữ liệu Depot API</td></tr>`;return}tableDepot.innerHTML=rows.map(r=>`<tr><td><b>${r.BAI||r.DEPOT||""}</b></td><td>${fmt(r.TOTAL_CONT)}</td><td>${fmt(r.TOTAL_TEU)}</td><td>${fmt(r.EMPTY_CONT)}</td><td>${fmt(r.FULL_CONT)}</td></tr>`).join("")}
-function renderInsight(totalTeu,totalPlan,rate,gap,forecast,actualRows,planRows){const actual=sumBy(actualRows,getLine,getKpiTeu),plan=sumBy(planRows,r=>normalizeLine(r.HANG_TAU),getPlanTeu),topLine=Object.keys(actual).sort((a,b)=>(actual[b]||0)-(actual[a]||0))[0]||"-",weak=Object.keys(plan).filter(l=>pct(actual[l]||0,plan[l]||0)<90).slice(0,3),lines=[];lines.push(`Kỳ này thực hiện <b>${fmt(totalTeu)} KPI TEU</b>, đạt <b>${rate.toFixed(1)}%</b> kế hoạch.`);if(gap>=0)lines.push(`Sản lượng đang vượt kế hoạch <b>+${fmt(gap)} TEU</b>.`);else lines.push(`Sản lượng còn thiếu <b>${fmt(Math.abs(gap))} TEU</b> so với kế hoạch.`);lines.push(`Hãng đóng góp lớn nhất hiện là <b>${topLine}</b>.`);if(weak.length)lines.push(`Cần theo dõi các hãng dưới 90%: <b>${weak.join(", ")}</b>.`);lines.push(`Forecast năm theo phương pháp TH + KH còn lại: <b>${fmt(forecast)} TEU</b>.`);lines.push(`Lưu ý: KPI TEU và KPI CONT trên màn hình này đã loại bỏ Xuất tàu.`);aiInsight.innerHTML=lines.map(l=>`<li>${l}</li>`).join("")}
-function loadData(){Promise.all([fetch(API_URL).then(r=>r.json()),fetch(API_DEPOT_URL).then(r=>r.json()).catch(()=>({}))]).then(([json,depot])=>{DATA=json||{};DEPOT=depot||{};if(!getActualSourceRows().length||!DATA.KE_HOACH_THANG){alert("API chưa có đủ dữ liệu: DATA_MODEL/API_MONTH_SUMMARY hoặc KE_HOACH_THANG.");return}lastUpdate.innerText="Cập nhật: "+new Date().toLocaleString("vi-VN");initFilters();updateDashboard()}).catch(err=>{console.error(err);lastUpdate.innerHTML="<span style='color:red'>Lỗi đọc dữ liệu API</span>"})}
+const API_URL_DEPOT = "https://script.google.com/macros/s/AKfycbxqXRAlVvWAM5icHWwJJwi2Gofn7cwGWfLskx6L--2_0rE9t7ZOKPP7ee-bT0_LZQSjeA/exec";
+let DATA = {}, chartAging=null, chartEmptyFull=null, chartLineStock=null;
+const AGE_BUCKETS=["0-30","31-60","61-90","91-120",">120"], LINES=["HAS","WHL","CKL","SKR","CHP","SOC"];
+function n(v){return Number(v)||0} function fmt(v){return Number(v||0).toLocaleString("vi-VN")} function tx(v){return String(v||"").trim().toUpperCase()}
+function sizeGroup(v){const s=String(v||"").trim(); if(s==="20")return"20"; if(s==="40"||s==="45")return"40"; return s||"KHAC"}
+function normalizeLine(s){
+  s = tx(s);
+
+  if(s.startsWith("CHP")) return "CHP";
+  if(s.startsWith("HAS")) return "HAS";
+  if(s.startsWith("WHL")) return "WHL";
+  if(s.startsWith("CKL")) return "CKL";
+  if(s.startsWith("SKR")) return "SKR";
+  if(s.startsWith("SOC")) return "SOC";
+
+  return s;
+}
+function getLine(r){return normalizeLine(r.HANG_TAU||r.LINE||r.HANG||r["Hãng tàu"]||r["Hang Cont"])}
+function getDepot(r){return tx(r.BAI||r.DEPOT||r.YARD||r["Yard Code"]||r["Bãi"])}
+function getEF(r){return tx(r.EF||r.EMPTY_FULL||r["Empty/Full"])}
+function getSize(r){return sizeGroup(r.SIZE||r.CNTR_SIZE||r["CNTR Size"])}
+function getCont(r){return n(r.CONT||r.TOTAL_CONT||r.CNTR||r.COUNT||1)}
+function getTeu(r){if(r.TEU||r.TOTAL_TEU)return n(r.TEU||r.TOTAL_TEU); return getSize(r)==="20"?getCont(r):getCont(r)*2}
+function getAgeDays(r){return n(r.AGING||r.AGE||r.SO_NGAY_TON||r["Số Ngày Tồn"]||r["SO NGAY TON"])}
+function ageBucket(d){if(d<=30)return"0-30"; if(d<=60)return"31-60"; if(d<=90)return"61-90"; if(d<=120)return"91-120"; return">120"}
+function getRawRows(){return [].concat(DATA.TON_BAI||[]).concat(DATA.API_DEPOT_STOCK||[]).concat(DATA.API_DEPOT_LINE_DETAIL||[])}
+function getLineRowsFallback(){return DATA.API_DEPOT_LINE||[]}
+function getCapacityRows(){return DATA.DM_DEPOT_CAPACITY||DATA.API_DEPOT_SUMMARY||[]}
+function applyFilters(rows){
+  const depot=filterDepot.value,line=filterLine.value,ef=filterEF.value,size=filterSize.value;
+  return rows.filter(r=>(!depot||getDepot(r)===depot)&&(!line||getLine(r)===line)&&(!ef||getEF(r)===ef)&&(!size||getSize(r)===size));
+}
+function initFilters(){
+  const raw=getRawRows(), lineRows=getLineRowsFallback();
+  const depots=[...new Set([].concat(raw.map(getDepot)).concat(getCapacityRows().map(r=>tx(r.BAI||r.DEPOT))))].filter(Boolean).sort();
+  const lines=[...new Set([].concat(LINES).concat(raw.map(getLine)).concat(lineRows.map(getLine)))].filter(Boolean);
+  filterDepot.innerHTML=`<option value="">Tất cả bãi</option>`+depots.map(d=>`<option value="${d}">${d}</option>`).join("");
+  filterLine.innerHTML=`<option value="">Tất cả hãng tàu</option>`+lines.map(l=>`<option value="${l}">${l}</option>`).join("");
+  ["filterDepot","filterLine","filterEF","filterSize"].forEach(id=>document.getElementById(id).addEventListener("change",updateDashboard));
+}
+function resetFilters(){filterDepot.value="";filterLine.value="";filterEF.value="";filterSize.value="";updateDashboard()}
+const valueLabelPlugin={id:"valueLabelPlugin",afterDatasetsDraw(chart){const{ctx}=chart;ctx.save();chart.data.datasets.forEach((ds,i)=>{const meta=chart.getDatasetMeta(i);if(meta.hidden)return;meta.data.forEach((el,idx)=>{const v=ds.data[idx];if(!v)return;ctx.fillStyle="#111827";ctx.font="bold 11px Arial";ctx.textAlign="center";ctx.textBaseline="bottom";if(el.x&&el.y)ctx.fillText(Number(v).toLocaleString("vi-VN"),el.x,el.y-6)})});ctx.restore()}};
+function updateDashboard(){
+  let rows=applyFilters(getRawRows()), hasDetail=rows.length>0, lineRows=applyFilters(getLineRowsFallback());
+  let totalCont=0,totalTeu=0,totalEmpty=0,totalFull=0;
+  if(hasDetail){totalCont=rows.reduce((s,r)=>s+getCont(r),0);totalTeu=rows.reduce((s,r)=>s+getTeu(r),0);totalEmpty=rows.filter(r=>getEF(r)==="E").reduce((s,r)=>s+getCont(r),0);totalFull=rows.filter(r=>getEF(r)==="F").reduce((s,r)=>s+getCont(r),0)}
+  else{totalCont=lineRows.reduce((s,r)=>s+n(r.CONT||r.TOTAL_CONT),0);totalTeu=lineRows.reduce((s,r)=>s+n(r.TEU||r.TOTAL_TEU),0);totalEmpty=lineRows.reduce((s,r)=>s+n(r.EMPTY||r.EMPTY_CONT||r.E),0);totalFull=lineRows.reduce((s,r)=>s+n(r.FULL||r.FULL_CONT||r.F),0)}
+  const cap=calcCapacity(), util=cap.maxTeu?totalTeu/cap.maxTeu*100:0, remain=Math.max(cap.maxTeu-totalTeu,0);
+  kpiCont.innerText=fmt(totalCont);kpiTeu.innerText=fmt(totalTeu);kpiEmpty.innerText=fmt(totalEmpty);kpiFull.innerText=fmt(totalFull);kpiUtil.innerText=util?util.toFixed(1)+"%":"N/A";kpiUtil.className="kpi-value "+(util>=85?"bad":util>=70?"warn":"ok");kpiRemain.innerText=fmt(remain);
+  renderAging(rows,hasDetail);renderEmptyFull(rows,lineRows,hasDetail);renderLineStock(rows,lineRows,hasDetail);renderCapacity(totalTeu);renderAgingLine(rows,hasDetail);renderLineEF(rows,lineRows,hasDetail);renderAlerts(totalCont,totalTeu,totalEmpty,totalFull,util,remain,rows,hasDetail);
+}
+function calcCapacity(){const depot=filterDepot.value;const caps=getCapacityRows().filter(r=>!depot||tx(r.BAI||r.DEPOT)===depot);let maxTeu=caps.reduce((s,r)=>s+n(r.MAX_TEU||r.CAPACITY_TEU),0);return{maxTeu}}
+function renderAging(rows,hasDetail){
+  const data=AGE_BUCKETS.map(()=>0);
+  if(hasDetail){rows.forEach(r=>data[AGE_BUCKETS.indexOf(ageBucket(getAgeDays(r)))]+=getCont(r))}
+  else if(DATA.API_DEPOT_AGING){DATA.API_DEPOT_AGING.forEach(r=>{const i=AGE_BUCKETS.indexOf(String(r.AGE_BUCKET||r.NHOM_TON||"").trim());if(i>=0)data[i]+=n(r.CONT||r.TOTAL_CONT)})}
+  if(chartAging)chartAging.destroy();chartAging=new Chart(document.getElementById("chartAging"),{type:"bar",data:{labels:AGE_BUCKETS,datasets:[{label:"CONT",data,borderRadius:8}]},options:{responsive:true,layout:{padding:{top:24}},plugins:{legend:{display:false}},scales:{y:{beginAtZero:true,grace:"18%"}}},plugins:[valueLabelPlugin]});
+}
+function lineList(rows,lineRows,hasDetail){const arr=hasDetail?rows.map(getLine):lineRows.map(getLine);return[...new Set([].concat(LINES).concat(arr))].filter(Boolean)}
+function renderEmptyFull(rows,lineRows,hasDetail){
+  const labels=lineList(rows,lineRows,hasDetail),empty={},full={};labels.forEach(l=>{empty[l]=0;full[l]=0});
+  if(hasDetail){rows.forEach(r=>{const l=getLine(r);if(!l)return;if(getEF(r)==="E")empty[l]+=getCont(r);if(getEF(r)==="F")full[l]+=getCont(r)})}
+  else{lineRows.forEach(r=>{const l=getLine(r);if(!l)return;empty[l]+=n(r.EMPTY||r.EMPTY_CONT||r.E);full[l]+=n(r.FULL||r.FULL_CONT||r.F)})}
+  if(chartEmptyFull)chartEmptyFull.destroy();chartEmptyFull=new Chart(document.getElementById("chartEmptyFull"),{type:"bar",data:{labels,datasets:[{label:"Empty",data:labels.map(l=>empty[l]||0),borderRadius:8},{label:"Full",data:labels.map(l=>full[l]||0),borderRadius:8}]},options:{responsive:true,layout:{padding:{top:24}},plugins:{legend:{position:"bottom"}},scales:{y:{beginAtZero:true,grace:"18%"}}},plugins:[valueLabelPlugin]});
+}
+function renderLineStock(rows,lineRows,hasDetail){
+  const labels=lineList(rows,lineRows,hasDetail),teu={},cont={};labels.forEach(l=>{teu[l]=0;cont[l]=0});
+  if(hasDetail){rows.forEach(r=>{const l=getLine(r);if(!l)return;teu[l]+=getTeu(r);cont[l]+=getCont(r)})}
+  else{lineRows.forEach(r=>{const l=getLine(r);if(!l)return;teu[l]+=n(r.TEU||r.TOTAL_TEU);cont[l]+=n(r.CONT||r.TOTAL_CONT)})}
+  if(chartLineStock)chartLineStock.destroy();chartLineStock=new Chart(document.getElementById("chartLineStock"),{type:"bar",data:{labels,datasets:[{label:"TEU",data:labels.map(l=>teu[l]||0),borderRadius:8},{label:"CONT",data:labels.map(l=>cont[l]||0),borderRadius:8}]},options:{responsive:true,layout:{padding:{top:24}},plugins:{legend:{position:"bottom"}},scales:{y:{beginAtZero:true,grace:"18%"}}},plugins:[valueLabelPlugin]});
+}
+function renderCapacity(totalTeu){
+  const depot=filterDepot.value,rows=getCapacityRows().filter(r=>!depot||tx(r.BAI||r.DEPOT)===depot);
+  if(!rows.length){tableCapacity.innerHTML='<tr><td colspan="5" style="text-align:center;color:#64748b">Chưa có DM_DEPOT_CAPACITY hoặc API_DEPOT_SUMMARY</td></tr>';return}
+  tableCapacity.innerHTML=rows.map(r=>{const bai=tx(r.BAI||r.DEPOT),maxTeu=n(r.MAX_TEU||r.CAPACITY_TEU),cur=n(r.TOTAL_TEU||r.TEU)||(depot?totalTeu:0),util=maxTeu?cur/maxTeu*100:n(r.UTILIZATION)*100,remain=n(r.REMAIN_TEU)||Math.max(maxTeu-cur,0),cls=util>=85?"bad":util>=70?"warn":"ok",bar=util>=85?"red":util>=70?"yellow":"";return`<tr><td><b>${bai}</b></td><td>${fmt(cur)}</td><td>${fmt(maxTeu)}</td><td class="${cls}">${util?util.toFixed(1)+"%":"N/A"}<div class="progress-bg"><div class="progress-fill ${bar}" style="width:${Math.min(util,100)}%"></div></div></td><td>${fmt(remain)}</td></tr>`}).join("");
+}
+function renderAgingLine(rows,hasDetail){
+  const map={}; 
+  if(hasDetail){rows.forEach(r=>{const l=getLine(r)||"KHÁC",b=ageBucket(getAgeDays(r)); if(!map[l])map[l]={"0-30":0,"31-60":0,"61-90":0,"91-120":0,">120":0,total:0};map[l][b]+=getCont(r);map[l].total+=getCont(r)})}
+  else if(DATA.API_DEPOT_AGING_LINE){DATA.API_DEPOT_AGING_LINE.forEach(r=>{const l=getLine(r)||"KHÁC",b=String(r.AGE_BUCKET||r.NHOM_TON||"").trim();if(!map[l])map[l]={"0-30":0,"31-60":0,"61-90":0,"91-120":0,">120":0,total:0};if(map[l][b]!==undefined){map[l][b]+=n(r.CONT||r.TOTAL_CONT);map[l].total+=n(r.CONT||r.TOTAL_CONT)}})}
+  const lines=Object.keys(map).sort((a,b)=>map[b].total-map[a].total); if(!lines.length){tableAgingLine.innerHTML='<tr><td colspan="7" style="text-align:center;color:#64748b">Chưa có dữ liệu Aging chi tiết</td></tr>';return}
+  tableAgingLine.innerHTML=lines.map(l=>`<tr><td><b>${l}</b></td><td>${fmt(map[l]["0-30"])}</td><td>${fmt(map[l]["31-60"])}</td><td>${fmt(map[l]["61-90"])}</td><td>${fmt(map[l]["91-120"])}</td><td class="${map[l][">120"]>0?"bad":""}">${fmt(map[l][">120"])}</td><td><b>${fmt(map[l].total)}</b></td></tr>`).join("");
+}
+function renderLineEF(rows,lineRows,hasDetail){
+  const map={}; function ensure(l){if(!map[l])map[l]={empty:0,full:0,teu:0,cont:0}}
+  if(hasDetail){rows.forEach(r=>{const l=getLine(r)||"KHÁC";ensure(l);if(getEF(r)==="E")map[l].empty+=getCont(r);if(getEF(r)==="F")map[l].full+=getCont(r);map[l].teu+=getTeu(r);map[l].cont+=getCont(r)})}
+  else{lineRows.forEach(r=>{const l=getLine(r)||"KHÁC";ensure(l);map[l].empty+=n(r.EMPTY||r.EMPTY_CONT||r.E);map[l].full+=n(r.FULL||r.FULL_CONT||r.F);map[l].teu+=n(r.TEU||r.TOTAL_TEU);map[l].cont+=n(r.CONT||r.TOTAL_CONT)})}
+  const lines=Object.keys(map).sort((a,b)=>map[b].cont-map[a].cont); if(!lines.length){tableLineEF.innerHTML='<tr><td colspan="5" style="text-align:center;color:#64748b">Chưa có dữ liệu theo hãng</td></tr>';return}
+  tableLineEF.innerHTML=lines.map(l=>`<tr><td><b>${l}</b></td><td>${fmt(map[l].empty)}</td><td>${fmt(map[l].full)}</td><td>${fmt(map[l].teu)}</td><td><b>${fmt(map[l].cont)}</b></td></tr>`).join("");
+}
+function renderAlerts(totalCont,totalTeu,totalEmpty,totalFull,util,remain,rows,hasDetail){
+  const alerts=[]; if(util>=85)alerts.push(`<div class="alert red">🔴 Bãi đang sử dụng <b>${util.toFixed(1)}%</b>, cần kiểm soát nhận thêm container.</div>`);else if(util>=70)alerts.push(`<div class="alert yellow">⚠️ Bãi đang sử dụng <b>${util.toFixed(1)}%</b>, cần theo dõi.</div>`);else if(util>0)alerts.push(`<div class="alert green">🟢 Bãi đang ở mức <b>${util.toFixed(1)}%</b>, còn khả năng nhận thêm.</div>`);
+  alerts.push(`<div class="alert blue">📦 Tổng tồn <b>${fmt(totalCont)} CONT</b>, tương đương <b>${fmt(totalTeu)} TEU</b>.</div>`);
+  alerts.push(`<div class="alert blue">🟢 Vỏ: <b>${fmt(totalEmpty)} CONT</b> | 🔴 Hàng: <b>${fmt(totalFull)} CONT</b>.</div>`);
+  if(remain>0)alerts.push(`<div class="alert green">🅿️ Bãi còn khoảng <b>${fmt(remain)} TEU</b> sức chứa.</div>`);
+  if(hasDetail){const over120=rows.filter(r=>getAgeDays(r)>120).reduce((s,r)=>s+getCont(r),0),over90=rows.filter(r=>getAgeDays(r)>90).reduce((s,r)=>s+getCont(r),0);if(over120>0)alerts.push(`<div class="alert red">🔴 Có <b>${fmt(over120)} CONT</b> tồn trên 120 ngày cần xử lý.</div>`);else if(over90>0)alerts.push(`<div class="alert yellow">⚠️ Có <b>${fmt(over90)} CONT</b> tồn trên 90 ngày cần theo dõi.</div>`)}else alerts.push('<div class="alert yellow">⚠️ Chưa có TON_BAI chi tiết nên Aging chỉ hiển thị khi API có API_DEPOT_AGING.</div>');
+  alertBox.innerHTML=alerts.slice(0,8).join("");
+}
+function loadData(){fetch(API_URL_DEPOT).then(r=>r.json()).then(json=>{DATA=json||{};lastUpdate.innerText="Cập nhật: "+new Date().toLocaleString("vi-VN");initFilters();updateDashboard()}).catch(err=>{console.error(err);lastUpdate.innerHTML='<span style="color:red">Lỗi đọc dữ liệu API Depot</span>'})}
 loadData();
 </script>
 </body>
